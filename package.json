@@ -1,0 +1,40 @@
+{
+  "name": "magx",
+  "version": "0.3.2",
+  "description": "Multiplayer game server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "patch": "tsc && npm version patch",
+    "major": "tsc && npm version major",
+    "minor": "tsc && npm version minor",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "Damir Yusipov",
+  "license": "MIT",
+  "dependencies": {
+    "notepack.io": "^2.3.0",
+    "ws": "^7.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^11.15.16",
+    "@types/ws": "^7.2.6",
+    "jest": "^26.0.1",
+    "ts-jest": "^26.1.0",
+    "ts-node": "^8.10.2",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.5"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  }
+}
