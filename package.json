@@ -1,6 +1,6 @@
 {
   "name": "magx",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Multiplayer game server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,14 @@
     "minor": "tsc && npm version minor",
     "test": "jest"
   },
-  "keywords": ["magx", "multiplayer", "server", "realtime", "networking", "websockets"],
+  "keywords": [
+    "magx",
+    "multiplayer",
+    "server",
+    "realtime",
+    "networking",
+    "websockets"
+  ],
   "repository": {
     "url": "https://github.com/udamir/magx.git",
     "type": "git"
