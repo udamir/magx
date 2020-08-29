@@ -18,7 +18,7 @@ export const api = (server: Server, prefix: string) => {
   return new Router(prefix)
     // get magx js client
     .get("/", Router.send(__dirname, "../../../magx-client/dist/magx.js"))
-    .get("/dev", Router.send(__dirname, "../../../magx-client.js/dist/magx.dev.js"))
+    .get("/dev", Router.send(__dirname, "../../../magx-client/dist/magx.dev.js"))
     // verify
     .get("/auth/:token", async (ctx: IRequestContext) => {
       ctx.body = await server.verify(ctx.params.token)
