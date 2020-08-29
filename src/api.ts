@@ -17,10 +17,8 @@ export const api = (server: Server, prefix: string) => {
 
   return new Router(prefix)
     // get magx js client
-    // .get("/dev", (ctx) => send(ctx, path.resolve(__dirname, "./../../", "magx-client/dist/magx.dev.js")))
-    // .get("/", serve(resolve(__dirname, "./../../", "magx-client/dist/magx.js")))
-    .get("/", Router.send(__dirname, "../../magx-client.js/dist/magx.js"))
-    .get("/dev", Router.send(__dirname, "../../magx-client.js/dist/magx.dev.js"))
+    .get("/", Router.send(__dirname, "../../../magx-client/dist/magx.js"))
+    .get("/dev", Router.send(__dirname, "../../../magx-client.js/dist/magx.dev.js"))
     // verify
     .get("/auth/:token", async (ctx: IRequestContext) => {
       ctx.body = await server.verify(ctx.params.token)
