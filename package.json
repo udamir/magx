@@ -10,7 +10,11 @@
     "minor": "tsc && npm version minor",
     "test": "jest"
   },
-  "keywords": [],
+  "keywords": ["magx", "multiplayer", "server", "realtime", "networking", "websockets"],
+  "repository": {
+    "url": "https://github.com/udamir/magx.git",
+    "type": "git"
+  },
   "author": "Damir Yusipov",
   "license": "MIT",
   "dependencies": {

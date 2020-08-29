@@ -64,10 +64,6 @@ export class Router {
         for (const listener of listeners) {
           listener.call(httpServer, req, res)
         }
-        if (!res.finished) {
-          res.writeHead(404)
-          res.end()
-        }
       }
     })
   }
