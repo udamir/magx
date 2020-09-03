@@ -108,7 +108,7 @@ export class WebSocketTransport extends Transport<WebSocketClient> {
     socket.on("close", (code: number, respon: string) => {
       // TODO: check code
       this.clients.delete(client)
-      this.onDisconnect(client)
+      this.onDisconnect(client, code)
     })
   }
 

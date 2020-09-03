@@ -157,7 +157,7 @@ export class RoomManager {
   }
 
   // handle client disconnection
-  public async onClientDisconnected(client: Client) {
+  public async onClientDisconnected(client: Client, code: number) {
     console.debug(`>> Process ${this.server.processId}: Client ${client.id} disconnect from room`, client.roomId)
 
     // set status to dsconnected
@@ -175,7 +175,7 @@ export class RoomManager {
     // check if client in room
     if (room.clients.get(client.id)) {
       // trigger room.onLeave(client)
-      room.onLeave && await room.onLeave(client, false)
+      room.onLeave && await room.onLeave(client, code === 1000)
       // check if client status updated
       const roomClient = room.clients.get(client.id)
       if (roomClient && roomClient.status === "connected") {

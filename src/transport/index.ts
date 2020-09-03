@@ -105,8 +105,8 @@ export abstract class Transport<T extends Client = any> extends EventEmitter {
     this.emit("connect", client, token)
   }
 
-  public onDisconnect(client: T) {
-    this.emit("disconnect", client)
+  public onDisconnect(client: T, code: number) {
+    this.emit("disconnect", client, code)
   }
 
   abstract get port(): number | undefined

@@ -122,6 +122,7 @@ export abstract class Room<T = any> {
 
     // start new tracker
     const disposer = this.tracker.onPatch((patch: IJsonPatch) => {
+      // TODO: add patch to patch queue and send patches on tick
       client.patch(client.state.patchId++, patch)
     }, params)
     this.disposers.set(client.id, disposer)

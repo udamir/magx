@@ -115,9 +115,9 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
     })
 
     // handle disconnection of client
-    this.transport.on("disconnect", (client: C) => {
+    this.transport.on("disconnect", (client: C, code: number) => {
       // disconnect client from room
-      this.rooms.onClientDisconnected(client)
+      this.rooms.onClientDisconnected(client, code)
     })
 
     // create IPC manager
