@@ -8,7 +8,6 @@ export * from "./src/auth/sessions"
 
 export * from "./src/transport"
 export * from "./src/transport/websocket"
-export * from "./src/transport/socketio"
 
 export * from "./src/cache"
 export * from "./src/cache/local"
