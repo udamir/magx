@@ -11,7 +11,6 @@ export * from "./auth/sessions"
 
 export * from "./transport"
 export * from "./transport/websocket"
-export * from "./transport/socketio"
 
 export * from "./cache"
 export * from "./cache/local"
