@@ -186,6 +186,7 @@ export abstract class Room<T = any> {
       port: this.port,
       hostId: this.hostId,
       name: this.name,
+      locked: this.locked,
       clients: [...this.clients.keys()],
       data: this.data,
     }
