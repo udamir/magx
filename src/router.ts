@@ -86,7 +86,7 @@ export class Router {
       const pathArr = (this.prefix + path)
         .replace(/^\/+|\/+$/g, "")
         .split("/")
-        .map((item) => item[0] === ":" ? "[A-Za-z0-9_]+" : item)
+        .map((item) => item[0] === ":" ? "[A-Za-z0-9_.\-]+" : item)
 
       const pathEnd =  (path.slice(-1) === "?") ? `(\/${pathArr.pop()})?$` : "$"
       const regExpPath = new RegExp(pathArr.join("\/") + pathEnd)
