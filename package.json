@@ -1,6 +1,6 @@
 {
   "name": "magx",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Multiplayer game server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
