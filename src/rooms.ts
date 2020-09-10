@@ -134,7 +134,7 @@ export class RoomManager {
         try {
           room.onJoin && await room.onJoin(client, options)
         } catch (error) {
-          return client.error(ErrorCode.JoinError, error)
+          return client.error(ErrorCode.JoinError, error.message)
         }
 
         // redirect all client messages to room
