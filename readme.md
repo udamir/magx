@@ -9,6 +9,15 @@ Multiplayer Game Server for Node.js
 - Scale vertically or horizontally
 - Fully customizable
 
+# Installation
+```npm install magx --save```
+
+# Examples
+https://github.com/udamir/magx-examples
+
+# Documentation
+soon...
+
 # License
 
 MIT
