@@ -87,7 +87,7 @@ export class LoadBalancer {
       }
     }
 
-    // send request to process to reserve seat for client
+    // send request to process
     return this.ipcm.requestProcess(room.pid, method, data)
   }
 
