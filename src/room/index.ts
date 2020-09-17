@@ -3,6 +3,8 @@ import {
   Client,
 } from "../internal"
 
+const DEFAULT_TICKRATE = 1000 / 20
+
 export interface IRoomData {
   // room name
   name: string
@@ -30,6 +32,16 @@ export interface IRoomObject extends IRoomData {
 interface IClientState {
   patchId: number
   trackingParams: { [key: string]: any },
+}
+
+interface ITrackerDisposer {
+  trackerDisposer: IDisposer
+  patchInterval: NodeJS.Timeout
+}
+
+interface ITrackerParams {
+  patchRate?: number
+  [param: string]: any
 }
 
 type RoomClient = Client<IClientState>
@@ -68,11 +80,11 @@ export abstract class Room<T = any> {
 
   // state change tracker
   public tracker: IStateTracker<T> | null = null
-  public disposers: Map<string, IDisposer>
+  public disposers: Map<string, ITrackerDisposer>
 
   constructor(roomData: IRoomData) {
     this.clients = new Map<string, RoomClient | null>()
-    this.disposers = new Map<string, IDisposer>()
+    this.disposers = new Map<string, ITrackerDisposer>()
 
     this.id = Date.now().toString(36).substring(3)
     this.hostId = roomData.hostId || ""
@@ -106,7 +118,7 @@ export abstract class Room<T = any> {
     })
   }
 
-  public startTracking(client: RoomClient, params?: any) {
+  public startTracking(client: RoomClient, params?: ITrackerParams) {
     // check if client already tracking state
     if (this.disposers.has(client.id)) { return }
 
@@ -114,18 +126,29 @@ export abstract class Room<T = any> {
       throw new Error("State tracker is not defined!")
     }
 
+    params = params || {} as ITrackerParams
+
     // update client state
     client.state = {
       patchId: 0,
       trackingParams: params,
     }
 
+    const patches = new Map<string, IJsonPatch>()
+
     // start new tracker
-    const disposer = this.tracker.onPatch((patch: IJsonPatch) => {
-      // TODO: add patch to patch queue and send patches on tick
-      client.patch(client.state.patchId++, patch)
+    const trackerDisposer = this.tracker.onPatch((patch: IJsonPatch) => {
+      patches.set(patch.op + patch.path, patch)
     }, params)
-    this.disposers.set(client.id, disposer)
+
+    const patchInterval = setInterval(() => {
+      patches.forEach((patch) => {
+        client.patch(client.state.patchId++, patch)
+      })
+      patches.clear()
+    }, params.patchRate || DEFAULT_TICKRATE) // TODO: move to defaults
+
+    this.disposers.set(client.id, { trackerDisposer, patchInterval })
 
     // send state with client
     this.sendState(client)
@@ -134,7 +157,10 @@ export abstract class Room<T = any> {
   public stopTracking(client: RoomClient) {
     // dispose client tracker
     const disposer = this.disposers.get(client.id)
-    disposer && disposer()
+    if (disposer) {
+      clearInterval(disposer.patchInterval)
+      disposer.trackerDisposer()
+    }
     // remove disposer
     this.disposers.delete(client.id)
   }

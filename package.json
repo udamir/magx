@@ -25,9 +25,7 @@
     "url": "https://github.com/udamir/magx.git",
     "type": "git"
   },
-  "publishConfig": { 
-    "registry": "https://npm.pkg.github.com/"
-  },
+
   "dependencies": {
     "notepack.io": "^2.3.0",
     "ws": "^7.3.1"
