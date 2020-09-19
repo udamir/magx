@@ -14,7 +14,7 @@ In server-authoritative multiplayer approach room state maintained on the server
 
 2. Active turn-based multiplayer: Like with Stormbound or Clash Royale mobile games where two or more players are connected and are playing a quick turn-based match. Players are expected to respond to turns immediately. The server receives input, validates them and broadcast to players. The expected tick-rate is quite low as rate of message sent and received is low.
 
-To create Authoritative Multiplayer server you need Flexible State Mangement with change tracking functionality. MosX is default state managment engine, but MagX you have the freedom and flexibility to choose state managment engine without limitations.
+To create Authoritative Multiplayer server you need Flexible State Mangement with change tracking functionality. [MosX](https://github.com/udamir/mosx) is default state managment engine, but you have the freedom and flexibility to choose state managment engine without limitations.
 
 In relayed multiplayer approach each client is act as the host of reconcile state changes between peers and perform arbitration on ambiguous or malicious messages sent from bad clients. So each client sends all state changes to server and server broadcasted them to otherr clients without inspection. This approach can be very useful for many types of gameplay but may not suitable for gameplay which depends on central state managed by the game server.
 
