@@ -19,6 +19,7 @@ export * from "./cache/cluster"
 export * from "./room"
 export * from "./room/tracker"
 export * from "./room/lobby"
+export * from "./room/relay"
 export * from "./room/inspector"
 
 export * from "./ipcm"

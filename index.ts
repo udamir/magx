@@ -16,6 +16,7 @@ export * from "./src/cache/cluster"
 export * from "./src/room"
 export * from "./src/room/tracker"
 export * from "./src/room/lobby"
+export * from "./src/room/relay"
 
 export * from "./src/router"
 

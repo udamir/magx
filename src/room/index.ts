@@ -34,12 +34,12 @@ interface IClientState {
   trackingParams: { [key: string]: any },
 }
 
-interface ITrackerDisposer {
+export interface ITrackerDisposer {
   trackerDisposer: IDisposer
   patchInterval: NodeJS.Timeout
 }
 
-interface ITrackerParams {
+export interface ITrackerParams {
   patchRate?: number
   [param: string]: any
 }
@@ -146,7 +146,7 @@ export abstract class Room<T = any> {
         client.patch(client.state.patchId++, patch)
       })
       patches.clear()
-    }, params.patchRate || DEFAULT_TICKRATE) // TODO: move to defaults
+    }, params.patchRate || DEFAULT_TICKRATE)
 
     this.disposers.set(client.id, { trackerDisposer, patchInterval })
 
@@ -200,8 +200,8 @@ export abstract class Room<T = any> {
     this.updateCache && this.updateCache()
   }
 
-  public broadcast(type: string, data: any) {
-    this.clients.forEach((client) => client && client.send(type, data))
+  public broadcast(type: string, data: any, exclude?: string) {
+    this.clients.forEach((client) => client && client.id !== exclude && client.send(type, data))
   }
 
   // convert room to cache object
