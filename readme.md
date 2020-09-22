@@ -1,4 +1,5 @@
 # MagX
+<img alt="npm" src="https://img.shields.io/npm/v/magx"> <img alt="npm" src="https://img.shields.io/npm/dm/magx?label=npm"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/magx">
 
 Multiplayer Game Server Framework for Node.js
 
