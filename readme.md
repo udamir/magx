@@ -3,8 +3,6 @@
 
 Multiplayer Game Server Framework for Node.js
 
-# Introduction
-
 ## What is MagX?
 
 Magx is a Multiplayer Game Server Framework for Node.js: server-authoritative multiplayer approach is supported as well as relayed multiplayer (also known as client-authoritative).
