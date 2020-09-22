@@ -30,7 +30,7 @@ In relayed multiplayer approach each client is act as the host of reconcile stat
 
 ### From examples project
 
-The easiest way to try out MagX is using the magx-example:
+The easiest way to try out MagX is using the [magx-example](https://github.com/udamir/magx-examples) project:
 
 ```
 git clone https://github.com/udamir/magx-examples.git
