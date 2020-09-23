@@ -1,5 +1,4 @@
 # MagX
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fudamir%2Fmagx.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fudamir%2Fmagx?ref=badge_shield)
 
 <img alt="npm" src="https://img.shields.io/npm/v/magx"> <img alt="npm" src="https://img.shields.io/npm/dm/magx?label=npm"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/magx">
 
@@ -157,8 +156,5 @@ Simple chat is ready! You can open several tabs, send and recieve messags.
 soon...
 
 ## License
-
-MIT
-
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fudamir%2Fmagx.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fudamir%2Fmagx?ref=badge_large)
