@@ -44,7 +44,7 @@ export interface ITrackerParams {
   [param: string]: any
 }
 
-type RoomClient = Client<IClientState>
+export type RoomClient = Client<IClientState>
 
 export type RoomClass = new (params: IRoomData) => Room
 

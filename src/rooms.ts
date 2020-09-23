@@ -75,6 +75,35 @@ export class RoomManager {
     this.roomTypes[name] = { roomClass, params }
   }
 
+  public setRoomClient(room: Room, client: Client, trackingParams?: any) {
+    // redirect all client messages to room
+    client.onMessage((type: string, data: any) => room.onMessage && room.onMessage(client, type, data))
+
+    // update room client
+    room.clients.set(client.id, client)
+
+    // start track state changes for client with previous trackingParams
+    if (room.tracker) {
+      room.startTracking(client, trackingParams)
+    }
+  }
+
+  public async removeRoomClient(room: Room, client: Client) {
+    // stop tracking
+    room.stopTracking(client)
+
+    // remove client
+    room.clients.delete(client.id)
+
+    if (!room.clients.size) {
+      // remove room without clients
+      return this.removeRoom(room)
+    } else {
+      // update room cache
+      return this.cache.set(room.id, room.toObject())
+    }
+  }
+
   // handle client connection
   public async onClientConnected(client: Client) {
     console.debug(`>> Process ${this.server.processId}: Client ${client.id} connect to room`, client.roomId)
@@ -100,20 +129,10 @@ export class RoomManager {
       client.on("_reconnected", async () => {
         clearTimeout(timer)
 
-        // redirect all client messages to room
-        client.onMessage((type: string, data: any) => room.onMessage && room.onMessage(client, type, data))
-
-        // update room client
-        room.clients.set(client.id, client)
-
-        // start track state changes for client with previous trackingParams
-        if (room.tracker) {
-          room.startTracking(client, roomClient.state.trackingParams)
-        }
+        this.setRoomClient(room, client, roomClient.state.trackingParams)
 
         client.status = "reconnected"
       })
-
     } else {
       // check reserved seat
       const reservationId = client.roomId + "-" + client.id
@@ -137,16 +156,7 @@ export class RoomManager {
           return client.error(ErrorCode.JoinError, error.message)
         }
 
-        // redirect all client messages to room
-        client.onMessage((type: string, data: any) => room.onMessage && room.onMessage(client, type, data))
-
-        // update room client
-        room.clients.set(client.id, client)
-
-        // start track state changes for client
-        if (room.tracker) {
-          room.startTracking(client)
-        }
+        this.setRoomClient(room, client)
 
         client.status = "connected"
       })
@@ -169,9 +179,6 @@ export class RoomManager {
       return client.error(ErrorCode.RoomNotFound, "Room not found")
     }
 
-    // stop tracking
-    room.stopTracking(client)
-
     // check if client in room
     if (room.clients.get(client.id)) {
       // trigger room.onLeave(client)
@@ -184,16 +191,7 @@ export class RoomManager {
       }
     }
 
-    // remove client
-    room.clients.delete(client.id)
-
-    if (!room.clients.size) {
-      // remove room without clients
-      await this.removeRoom(room)
-    } else {
-      // update room cache
-      await this.cache.set(room.id, room.toObject())
-    }
+    return this.removeRoomClient(room, client)
   }
 
   // reserve seat for client
@@ -372,22 +370,11 @@ export class RoomManager {
 
     const client = room.clients.get(sessionId)
 
-    if (client) {
-      // trigger room.onLeave(client)
-      room.onLeave && room.onLeave(client, true)
+    if (!client) { return }
+    // trigger room.onLeave(client)
+    room.onLeave && room.onLeave(client, true)
 
-      // stop tracking and remove client
-      room.stopTracking(client)
-      room.clients.delete(client.id)
-    }
-
-    if (!room.clients.size) {
-      // remove room without clients
-      await this.removeRoom(room)
-    } else {
-      // update room cache
-      await this.cache.set(room.id, room.toObject())
-    }
+    return this.removeRoomClient(room, client)
   }
 
   // close room
