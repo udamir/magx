@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 
-import { IAuth, IJsonPatch } from "../internal"
+import { IAuth, IJsonPatch, ISchema } from "../internal"
 
 export type MessageListener = (type: string, data: any) => void
 export type EventListener = (...args: any) => void
@@ -21,12 +21,21 @@ export const ErrorCode = {
 }
 
 export const ClientEvent = {
-  message: "_message",
-  request: "_request",
-  snapshot: "_snapshot",
-  patch: "_patch",
-  error: "_error",
-  connected: "_connected",
+  error: 0,
+  connected: 1,
+  reconnected: 2,
+  joined: 3,
+
+  message: 4,
+  request: 5,
+  response: 6,
+
+  snapshot: 11,
+  patch: 12,
+
+  schema: 20,
+  compressedSnapshot: 21,
+  compressedPatch: 22,
 }
 
 export abstract class Client<T = any> {
@@ -63,13 +72,18 @@ export abstract class Client<T = any> {
   }
 
   // send state patch
-  public patch(id: number, patch: IJsonPatch) {
-    this.emit(ClientEvent.patch, id, patch)
+  public patch(patch: IJsonPatch, compression = false) {
+    if (compression && patch.compressed) {
+      this.emit(ClientEvent.compressedPatch, patch.compressed)
+    } else {
+      const { compressed, ...rest } = patch
+      this.emit(ClientEvent.patch, rest)
+    }
   }
 
   // send state snapshot
-  public snapshot(id: number, snapshot: any) {
-    this.emit(ClientEvent.snapshot, id, snapshot)
+  public snapshot(snapshot: any, schema?: ISchema) {
+    this.emit(ClientEvent.snapshot, snapshot, schema)
   }
 
   public error(code?: number, message?: string) {
@@ -94,8 +108,8 @@ export abstract class Client<T = any> {
     })
   }
 
-  public abstract on(event: string, listner: MessageListener): void
-  public abstract emit(event: string, ...args: any): void
+  public abstract on(event: number, listner: MessageListener): void
+  public abstract emit(event: number, ...args: any): void
 
   public abstract terminate(code?: number, reason?: string): void
 }

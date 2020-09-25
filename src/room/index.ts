@@ -1,5 +1,5 @@
 import {
-  IStateTracker, IJsonPatch, IDisposer,
+  IStateTracker, IJsonPatch, IDisposer, ISchema,
   Client,
 } from "../internal"
 
@@ -30,7 +30,6 @@ export interface IRoomObject extends IRoomData {
 }
 
 interface IClientState {
-  patchId: number
   trackingParams: { [key: string]: any },
 }
 
@@ -41,6 +40,7 @@ export interface ITrackerDisposer {
 
 export interface ITrackerParams {
   patchRate?: number
+  compression?: boolean
   [param: string]: any
 }
 
@@ -118,7 +118,7 @@ export abstract class Room<T = any> {
     })
   }
 
-  public startTracking(client: RoomClient, params?: ITrackerParams) {
+  public startTracking(client: RoomClient, params: ITrackerParams = {}) {
     // check if client already tracking state
     if (this.disposers.has(client.id)) { return }
 
@@ -126,15 +126,13 @@ export abstract class Room<T = any> {
       throw new Error("State tracker is not defined!")
     }
 
-    params = params || {} as ITrackerParams
-
     // update client state
     client.state = {
-      patchId: 0,
       trackingParams: params,
     }
 
     const patches = new Map<string, IJsonPatch>()
+    const schema = this.tracker.schema
 
     // start new tracker
     const trackerDisposer = this.tracker.onPatch((patch: IJsonPatch) => {
@@ -142,16 +140,14 @@ export abstract class Room<T = any> {
     }, params)
 
     const patchInterval = setInterval(() => {
-      patches.forEach((patch) => {
-        client.patch(client.state.patchId++, patch)
-      })
+      patches.forEach((patch) => client.patch(patch, !!params.compression))
       patches.clear()
     }, params.patchRate || DEFAULT_TICKRATE)
 
     this.disposers.set(client.id, { trackerDisposer, patchInterval })
 
     // send state with client
-    this.sendState(client)
+    this.sendState(client, schema)
   }
 
   public stopTracking(client: RoomClient) {
@@ -165,21 +161,18 @@ export abstract class Room<T = any> {
     this.disposers.delete(client.id)
   }
 
-  public sendState(client: RoomClient) {
+  public sendState(client: RoomClient, schema?: ISchema) {
 
     if (!this.tracker) {
       throw new Error("State tracker is not defined!")
     }
 
-    // reset patch index
-    client.state.patchId = 0
-
     // send snapshot
     const snapshot = this.tracker.snapshot(client.state.trackingParams)
-    client.snapshot(client.state.patchId++, snapshot)
+    client.snapshot(snapshot, schema)
   }
 
-  public updateTrackingParams(client: RoomClient, params: any) {
+  public updateTrackingParams(client: RoomClient, params: ITrackerParams) {
 
     // stop tracking with old params
     this.stopTracking(client)

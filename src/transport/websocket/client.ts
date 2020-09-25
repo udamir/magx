@@ -1,16 +1,11 @@
 import WebSocket from "ws"
 
-import { Client, IClientData, EventListener, IMessagePack } from "../../internal"
+import { Client, IClientData, EventListener, IMessagePack, ClientEvent } from "../../internal"
 
 export interface IWebSocketClientData extends IClientData {
   ref: WebSocket
   messagePack: IMessagePack
   requestTimeout?: number
-}
-
-interface IMessage {
-  event: string
-  args: any
 }
 
 interface IResponse {
@@ -30,7 +25,7 @@ export class WebSocketClient extends Client {
   public pingCount: number = 0
 
   // event listeners
-  public listners: { [type: string]: EventListener[] } = {}
+  public listners: { [type: number]: EventListener[] } = {}
 
   // request timeout
   public requestTimeout: number
@@ -47,12 +42,13 @@ export class WebSocketClient extends Client {
     this.messagePack = clientData.messagePack
     this.requestTimeout = clientData.requestTimeout || 1000
 
-    this.ws.on("message", (msg) => {
-      const message = this.messagePack.decode<IMessage>(msg)
-      // console.log(`Message from server`, message)
-      if (message.event === "_response") {
+    this.ws.on("message", (buf: Buffer) => {
+      const event = buf[0]
+      const args = this.messagePack.decode<any[]>(buf.slice(1))
+
+      if (event === ClientEvent.response) {
         // handlet request response
-        const [ id, err, data ] = message.args
+        const [ id, err, data ] = args
         const response = this.responses[id]
         if (response) {
           clearTimeout(response.timer)
@@ -63,10 +59,10 @@ export class WebSocketClient extends Client {
             response.resolve(data)
           }
         }
-      } else if (message.event) {
+      } else if (event) {
         // handle event listeners
-        const listners = this.listners[message.event] || []
-        listners.forEach(((listener) => listener(...message.args)))
+        const listners = this.listners[event] || []
+        listners.forEach(((listener) => listener(...args)))
       }
     })
   }
@@ -77,12 +73,12 @@ export class WebSocketClient extends Client {
       const id = this.lastResponseId++
       const timer = setTimeout(() => reject("Request timeout"), 1000)
       this.responses[id] = { resolve, reject, timer }
-      this.emit("_request", type, data, id)
+      this.emit(ClientEvent.request, type, data, id)
     })
   }
 
   // add event listner
-  public on(event: string, listner: EventListener) {
+  public on(event: number, listner: EventListener) {
     if (!this.listners[event]) {
       this.listners[event] = []
     }
@@ -90,9 +86,13 @@ export class WebSocketClient extends Client {
   }
 
   // send event
-  public emit(event: string, ...args: any): void {
-    // console.log(`Send message to client`, event, JSON.stringify(args))
-    this.ws.send(this.messagePack.encode<IMessage>({ event, args }))
+  public emit(event: number, ...args: any[]): void {
+    // transport protocol:
+    //        | event | messagePack args
+    // Buffer |    01 | 34 FF AD ...
+
+    const pack = this.messagePack.encode(args)
+    this.ws.send(Buffer.concat([Buffer.from([event]), pack]))
   }
 
   // terminate connection

@@ -1,5 +1,5 @@
 import {
-  Server, Client, ErrorCode,
+  Server, Client, ErrorCode, ClientEvent,
   Room, RoomClass, IRoomObject,
   RoomInspector, LobbyRoom,
   ICache,
@@ -126,7 +126,7 @@ export class RoomManager {
         roomClient.error(ErrorCode.ReconnectError, "Client Reconnected")
       }
 
-      client.on("_reconnected", async () => {
+      client.on(ClientEvent.reconnected, async () => {
         clearTimeout(timer)
 
         this.setRoomClient(room, client, roomClient.state.trackingParams)
@@ -147,7 +147,7 @@ export class RoomManager {
       // remove reservation
       this.reservedSeats.delete(reservationId)
 
-      client.on("_joined", async () => {
+      client.on(ClientEvent.joined, async () => {
         clearTimeout(timer)
         // trigger room.onJoin(client)
         try {

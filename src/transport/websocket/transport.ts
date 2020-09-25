@@ -9,8 +9,8 @@ import { Transport, WebSocketClient, IWebSocketClientData } from "../../internal
 const noop = () => {/* tslint:disable:no-empty */ }
 
 export interface IMessagePack {
-  encode<T>(value: T): any
-  decode<T>(buffer: any): T
+  encode<T>(value: T): Buffer
+  decode<T>(buffer: Buffer): T
 }
 
 export interface IWebSocketTransportOptions {
