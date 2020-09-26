@@ -4,7 +4,13 @@ export interface IJsonPatch {
   op: "replace" | "add" | "remove"
   path: string
   value?: any
+}
+
+export interface IReversibleJsonPatch extends IJsonPatch {
   oldValue?: any
+}
+
+export interface ICompressedJsonPatch extends IReversibleJsonPatch {
   compressed?: Int8Array
 }
 

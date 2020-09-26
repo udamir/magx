@@ -1,6 +1,7 @@
 import { EventEmitter } from "events"
 
 import { IAuth, IJsonPatch, ISchema } from "../internal"
+import { ICompressedJsonPatch } from "../room/tracker"
 
 export type MessageListener = (type: string, data: any) => void
 export type EventListener = (...args: any) => void
@@ -72,7 +73,7 @@ export abstract class Client<T = any> {
   }
 
   // send state patch
-  public patch(patch: IJsonPatch, compression = false) {
+  public patch(patch: ICompressedJsonPatch, compression = false) {
     if (compression && patch.compressed) {
       this.emit(ClientEvent.compressedPatch, patch.compressed)
     } else {

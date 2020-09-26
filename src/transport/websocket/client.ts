@@ -88,11 +88,14 @@ export class WebSocketClient extends Client {
   // send event
   public emit(event: number, ...args: any[]): void {
     // transport protocol:
-    //        | event | messagePack args
+    //        | event | data
     // Buffer |    01 | 34 FF AD ...
-
-    const pack = this.messagePack.encode(args)
-    this.ws.send(Buffer.concat([Buffer.from([event]), pack]))
+    if (event === ClientEvent.compressedPatch && args[0] instanceof Buffer) {
+      this.ws.send(Buffer.concat([Buffer.from([event]), args[0]]))
+    } else {
+      const pack = this.messagePack.encode(args)
+      this.ws.send(Buffer.concat([Buffer.from([event]), pack]))
+    }
   }
 
   // terminate connection
