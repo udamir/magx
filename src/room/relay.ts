@@ -29,6 +29,7 @@ export class RelayRoom extends Room {
       },
       snapshot: () => this.state,
       dispose: () => this.listeners.clear(),
+      decodeMap: () => {},
     }
   }
 

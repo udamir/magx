@@ -10,22 +10,15 @@ export interface IReversibleJsonPatch extends IJsonPatch {
   oldValue?: any
 }
 
-export interface ICompressedJsonPatch extends IReversibleJsonPatch {
-  compressed?: Int8Array
-}
-
-export interface ISchema {
-  index: number
-  name: string
-  props: Array<string>
-  types: Array<string>
+export interface IEncodedJsonPatch extends IReversibleJsonPatch {
+  encoded?: Buffer
 }
 
 export type PatchListener<T> = (patch: IJsonPatch, obj?: any, root?: T) => void
 
 export interface IStateTracker<T> {
-  onPatch: (listner: PatchListener<T>, params?: any) => IDisposer
-  snapshot: (params?: any) => { [key: string]: any }
-  dispose: () => void
-  schema?: ISchema
+  onPatch(listner: PatchListener<T>, params?: any): IDisposer
+  snapshot(params?: any): { [key: string]: any }
+  dispose(): void
+  decodeMap(serializer?: string): any
 }

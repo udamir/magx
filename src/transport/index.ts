@@ -1,7 +1,6 @@
 import { EventEmitter } from "events"
 
-import { IAuth, IJsonPatch, ISchema } from "../internal"
-import { ICompressedJsonPatch } from "../room/tracker"
+import { IAuth, IEncodedJsonPatch } from "../internal"
 
 export type MessageListener = (type: string, data: any) => void
 export type EventListener = (...args: any) => void
@@ -35,8 +34,8 @@ export const ClientEvent = {
   patch: 12,
 
   schema: 20,
-  compressedSnapshot: 21,
-  compressedPatch: 22,
+  encodedSnapshot: -11,
+  encodedPatch: -12,
 }
 
 export abstract class Client<T = any> {
@@ -73,17 +72,17 @@ export abstract class Client<T = any> {
   }
 
   // send state patch
-  public patch(patch: ICompressedJsonPatch, compression = false) {
-    if (compression && patch.compressed) {
-      this.emit(ClientEvent.compressedPatch, patch.compressed)
+  public patch(patch: IEncodedJsonPatch) {
+    if (patch.encoded) {
+      this.emit(ClientEvent.encodedPatch, patch.encoded)
     } else {
-      const { compressed, ...rest } = patch
+      const { encoded, ...rest } = patch
       this.emit(ClientEvent.patch, rest)
     }
   }
 
   // send state snapshot
-  public snapshot(snapshot: any, schema?: ISchema) {
+  public snapshot(snapshot: any, schema?: any) {
     this.emit(ClientEvent.snapshot, snapshot, schema)
   }
 

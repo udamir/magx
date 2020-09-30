@@ -90,7 +90,7 @@ export class WebSocketClient extends Client {
     // transport protocol:
     //        | event | data
     // Buffer |    01 | 34 FF AD ...
-    if (event === ClientEvent.compressedPatch && args[0] instanceof Buffer) {
+    if (event === ClientEvent.encodedPatch && args[0] instanceof Buffer) {
       this.ws.send(Buffer.concat([Buffer.from([event]), args[0]]))
     } else {
       const pack = this.messagePack.encode(args)

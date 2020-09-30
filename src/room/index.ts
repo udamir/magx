@@ -1,5 +1,5 @@
 import {
-  IStateTracker, IJsonPatch, IDisposer, ISchema,
+  IStateTracker, IJsonPatch, IDisposer,
   Client,
 } from "../internal"
 
@@ -40,7 +40,7 @@ export interface ITrackerDisposer {
 
 export interface ITrackerParams {
   patchRate?: number
-  compression?: boolean
+  serializer?: string
   [param: string]: any
 }
 
@@ -132,7 +132,6 @@ export abstract class Room<T = any> {
     }
 
     const patches = new Map<string, IJsonPatch>()
-    const schema = this.tracker.schema
 
     // start new tracker
     const trackerDisposer = this.tracker.onPatch((patch: IJsonPatch) => {
@@ -140,14 +139,14 @@ export abstract class Room<T = any> {
     }, params)
 
     const patchInterval = setInterval(() => {
-      patches.forEach((patch) => client.patch(patch, !!params.compression))
+      patches.forEach((patch) => client.patch(patch))
       patches.clear()
     }, params.patchRate || DEFAULT_TICKRATE)
 
     this.disposers.set(client.id, { trackerDisposer, patchInterval })
 
     // send state with client
-    this.sendState(client, schema)
+    this.sendState(client, this.tracker.decodeMap(params.serializer))
   }
 
   public stopTracking(client: RoomClient) {
@@ -161,7 +160,7 @@ export abstract class Room<T = any> {
     this.disposers.delete(client.id)
   }
 
-  public sendState(client: RoomClient, schema?: ISchema) {
+  public sendState(client: RoomClient, schema?: any) {
 
     if (!this.tracker) {
       throw new Error("State tracker is not defined!")
