@@ -1,4 +1,5 @@
 # MagX
+
 <img alt="npm" src="https://img.shields.io/npm/v/magx"> <img alt="npm" src="https://img.shields.io/npm/dm/magx?label=npm"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/magx">
 
 Multiplayer Game Server Framework for Node.js
@@ -156,4 +157,4 @@ soon...
 
 ## License
 
-MIT
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fudamir%2Fmagx.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fudamir%2Fmagx?ref=badge_large)
