@@ -1,6 +1,6 @@
 {
   "name": "magx",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Multiplayer game server framework",
   "author": "Damir Yusipov",
   "license": "MIT",
