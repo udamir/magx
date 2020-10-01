@@ -89,9 +89,6 @@ export class RoomManager {
   }
 
   public async removeRoomClient(room: Room, client: Client) {
-    // stop tracking
-    room.stopTracking(client)
-
     // remove client
     room.clients.delete(client.id)
 
@@ -178,6 +175,9 @@ export class RoomManager {
     if (!room) {
       return client.error(ErrorCode.RoomNotFound, "Room not found")
     }
+
+    // stop tracking
+    room.stopTracking(client)
 
     // check if client in room
     if (room.clients.get(client.id)) {
@@ -373,6 +373,9 @@ export class RoomManager {
     if (!client) { return }
     // trigger room.onLeave(client)
     room.onLeave && room.onLeave(client, true)
+
+    // stop tracking
+    room.stopTracking(client)
 
     return this.removeRoomClient(room, client)
   }
