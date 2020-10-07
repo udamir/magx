@@ -131,16 +131,15 @@ export abstract class Room<T = any> {
       trackingParams: params,
     }
 
-    const patches = new Map<string, IJsonPatch>()
-
+    const patches: IJsonPatch[] = []
     // start new tracker
-    const trackerDisposer = this.tracker.onPatch((patch: IJsonPatch) => {
-      patches.set(patch.op + patch.path, patch)
+    const trackerDisposer = this.tracker.onPatch((patch) => {
+      patches.push(patch)
     }, params)
 
     const patchInterval = setInterval(() => {
-      patches.forEach((patch) => client.patch(patch))
-      patches.clear()
+      patches.forEach(client.patch)
+      patches.length = 0
     }, params.patchRate || DEFAULT_TICKRATE)
 
     this.disposers.set(client.id, { trackerDisposer, patchInterval })
