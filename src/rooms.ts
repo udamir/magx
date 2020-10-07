@@ -144,14 +144,15 @@ export class RoomManager {
       // remove reservation
       this.reservedSeats.delete(reservationId)
 
+      // trigger room.onJoin(client)
+      try {
+        room.onJoin && await room.onJoin(client, options)
+      } catch (error) {
+        return client.error(ErrorCode.JoinError, error.message)
+      }
+
       client.on(ClientEvent.joined, async () => {
         clearTimeout(timer)
-        // trigger room.onJoin(client)
-        try {
-          room.onJoin && await room.onJoin(client, options)
-        } catch (error) {
-          return client.error(ErrorCode.JoinError, error.message)
-        }
 
         this.setRoomClient(room, client)
 

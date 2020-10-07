@@ -139,12 +139,12 @@ export class Router {
       } else {
         ctx.payload = buffer
       }
-      // try {
-      await next()
-      // } catch (error) {
-      //   ctx.status = 400
-      //   ctx.body = error
-      // }
+      try {
+        await next()
+      } catch (error) {
+        ctx.status = 400
+        ctx.body = error
+      }
       const headers: http.OutgoingHttpHeaders = {
         "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
         "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
