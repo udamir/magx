@@ -138,7 +138,7 @@ export abstract class Room<T = any> {
     }, params)
 
     const patchInterval = setInterval(() => {
-      patches.forEach(client.patch)
+      patches.forEach((patch) => client.patch(patch))
       patches.length = 0
     }, params.patchRate || DEFAULT_TICKRATE)
 
