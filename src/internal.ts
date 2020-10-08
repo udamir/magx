@@ -10,6 +10,7 @@ export * from "./auth"
 export * from "./auth/sessions"
 
 export * from "./transport"
+export * from "./transport/local"
 export * from "./transport/websocket"
 
 export * from "./cache"
