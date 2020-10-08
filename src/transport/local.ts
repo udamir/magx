@@ -7,7 +7,7 @@ interface IChangeHandler {
   handler: (patch: IJsonPatch, params: any) => void
 }
 
-export abstract class LocalClient extends Client {
+export class LocalClient extends Client {
   public handlers: { [event: string]: any } = {}
   public listeners: { [event: string]: MessageListener[] } = {}
 
