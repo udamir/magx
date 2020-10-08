@@ -120,7 +120,7 @@ export class RoomManager {
     if (roomClient) {
       if (roomClient.status !== "disconnected") {
         // terminate previos previos client
-        return roomClient.error(ErrorCode.ReconnectError, "Client Reconnected")
+        roomClient.error(ErrorCode.ReconnectError, "Client Reconnected")
       }
 
       client.on(ClientEvent.reconnected, async () => {
