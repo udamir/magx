@@ -7,6 +7,7 @@ export * from "./src/auth"
 export * from "./src/auth/sessions"
 
 export * from "./src/transport"
+export * from "./src/transport/local"
 export * from "./src/transport/websocket"
 
 export * from "./src/cache"
