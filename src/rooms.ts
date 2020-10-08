@@ -120,7 +120,7 @@ export class RoomManager {
     if (roomClient) {
       if (roomClient.status !== "disconnected") {
         // terminate previos previos client
-        roomClient.error(ErrorCode.ReconnectError, "Client Reconnected")
+        return roomClient.error(ErrorCode.ReconnectError, "Client Reconnected")
       }
 
       client.on(ClientEvent.reconnected, async () => {
@@ -130,6 +130,9 @@ export class RoomManager {
 
         client.status = "reconnected"
       })
+
+      // set clent connected
+      client.connected()
     } else {
       // check reserved seat
       const reservationId = client.roomId + "-" + client.id
@@ -137,6 +140,9 @@ export class RoomManager {
         // terminate client
         return client.error(ErrorCode.ReservationExpired, "Reservation expired")
       }
+
+      // set clent connected
+      client.connected()
 
       const { options, disposer } = this.reservedSeats.get(reservationId)
       // dispose resevation timout
@@ -159,9 +165,6 @@ export class RoomManager {
         client.status = "connected"
       })
     }
-
-    // set clent connected
-    client.connected()
   }
 
   // handle client disconnection
