@@ -111,10 +111,6 @@ export class RoomManager {
       return client.error(ErrorCode.RoomNotFound, "Room not found")
     }
 
-    const timer = setTimeout(() => {
-      client.error(ErrorCode.ConnectionTimeout, "Connection timeout")
-    }, this.server.connectionTimeout)
-
     const roomClient = room.clients.get(client.id)
     // check if client reconnected
     if (roomClient) {
@@ -144,21 +140,25 @@ export class RoomManager {
       // remove reservation
       this.reservedSeats.delete(reservationId)
 
-      // trigger room.onJoin(client)
-      try {
-        room.onJoin && await room.onJoin(client, options)
-      } catch (error) {
-        return client.error(ErrorCode.JoinError, error.message)
-      }
-
       client.on(ClientEvent.joined, async () => {
         clearTimeout(timer)
+
+        // trigger room.onJoin(client)
+        try {
+          room.onJoin && await room.onJoin(client, options)
+        } catch (error) {
+          return client.error(ErrorCode.JoinError, error.message)
+        }
 
         this.setRoomClient(room, client)
 
         client.status = "connected"
       })
     }
+
+    const timer = setTimeout(() => {
+      client.error(ErrorCode.ConnectionTimeout, "Connection timeout")
+    }, this.server.connectionTimeout)
 
     // set clent connected
     client.connected()
