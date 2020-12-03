@@ -78,7 +78,7 @@ export abstract class IPCManager {
     this.requestHandlers[method] = handler
   }
 
-  public abstract async pids(): Promise<string[]>
+  public abstract pids(): Promise<string[]>
   public abstract subscribe(channel: string, listner: ProcessListner<any>): void
   public abstract unsubscribe(channel: string): void
   public abstract publish(channel: string, data: any): void

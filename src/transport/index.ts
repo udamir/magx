@@ -38,6 +38,9 @@ export const ClientEvent = {
   encodedPatch: -12,
 }
 
+export type ClientStatus = "connecting" | "connected" | "disconnected" | "reconnected"
+export type EventArgs = [ event: number, ...args: any ]
+
 export abstract class Client<T = any> {
   // client session
   public auth: IAuth = {} as IAuth
@@ -46,24 +49,45 @@ export abstract class Client<T = any> {
   public roomId: string
 
   // client status
-  public status: "connecting" | "connected" | "disconnected" | "reconnected"
+  public _status: ClientStatus
 
   // client state
   public state: T
 
+  // messages stack before connected
+  public messages: any[] = []
+
   // client id and data
   get id(): string { return this.auth.id }
   get data(): any { return this.auth.data }
+  get status(): ClientStatus {
+    return this._status
+  }
+  set status(status: ClientStatus) {
+    this._status = status
+    if (status === "connected" || status === "reconnected") {
+      this.messages.forEach((args: EventArgs) => this.emit(...args))
+      this.messages = []
+    }
+  }
 
   constructor(data: IClientData) {
     this.roomId = data.roomId
-    this.status = "connecting"
+    this._status = "connecting"
     this.state = data.state || {} as T
+  }
+
+  private safeEmit(event: number, ...args: any) {
+    if (this.status === "connecting") {
+      this.messages.push([ event, ...args ])
+    } else {
+      this.emit(event, ...args)
+    }
   }
 
   // send message
   public send(type: string, data: any) {
-    this.emit(ClientEvent.message, type, data)
+    this.safeEmit(ClientEvent.message, type, data)
   }
 
   // add message listner
@@ -74,16 +98,16 @@ export abstract class Client<T = any> {
   // send state patch
   public patch(patch: IEncodedJsonPatch) {
     if (patch.encoded) {
-      this.emit(ClientEvent.encodedPatch, patch.encoded)
+      this.safeEmit(ClientEvent.encodedPatch, patch.encoded)
     } else {
       const { encoded, ...rest } = patch
-      this.emit(ClientEvent.patch, rest)
+      this.safeEmit(ClientEvent.patch, rest)
     }
   }
 
   // send state snapshot
   public snapshot(snapshot: any) {
-    this.emit(ClientEvent.snapshot, snapshot)
+    this.safeEmit(ClientEvent.snapshot, snapshot)
   }
 
   public error(code?: number, message?: string) {
@@ -97,7 +121,7 @@ export abstract class Client<T = any> {
 
   public async request(type: string, data: any): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.emit(ClientEvent.request, type, data, (err: any, res: any) => {
+      this.safeEmit(ClientEvent.request, type, data, (err: any, res: any) => {
         if (err) {
           console.debug("REJECT: request error")
           reject(err)
