@@ -1,6 +1,5 @@
 # MagX
 
-<img alt="npm" src="https://img.shields.io/npm/v/magx"> <img alt="npm" src="https://img.shields.io/npm/dm/magx?label=npm"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/magx">
 <img alt="npm" src="https://img.shields.io/npm/v/magx"> <img alt="npm" src="https://img.shields.io/npm/dm/magx?label=npm"> <img alt="npm type definitions" src="https://img.shields.io/npm/types/magx"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/magx">
 
 Multiplayer Game Server Framework for Node.js
@@ -19,7 +18,6 @@ To create Authoritative Multiplayer server you need Flexible State Mangement wit
 
 In relayed multiplayer approach each client is act as the host of reconcile state changes between peers and perform arbitration on ambiguous or malicious messages sent from bad clients. So each client sends all state changes to server and server broadcasted them to otherr clients without inspection. This approach can be very useful for many types of gameplay but may not suitable for gameplay which depends on central state managed by the game server.
 
-## MagX provides to you:
 ## Summary
 MagX provides to you:
 - WebSocket-based communication
@@ -144,16 +142,12 @@ client.authenticate()
       input.value = "";
     }
   })
-git clone https://github.com/udamir/magx-examples.git
-cd magx-examples
-npm install
 ```
 
 Simple chat is ready! You can open several tabs, send and recieve messags.
 
 ## Documentation
 soon...
-To run the MagX server, run ```npm start```
 
 ## License
 
