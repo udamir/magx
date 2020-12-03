@@ -27,7 +27,7 @@ export const api = (server: Server, prefix: string) => {
     // authenticate
     .post("/auth", async (ctx: IRequestContext) => {
       const id = ctx.payload.id || server.generator(ctx.payload.data)
-      ctx.body = await server.auth.sign(ctx.payload.data, id)
+      ctx.body = await server.auth.sign(id, ctx.payload.data)
     })
     // get room
     .get("/rooms/:id", authorized, async (ctx: IRequestContext) => {
