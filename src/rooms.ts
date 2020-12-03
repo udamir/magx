@@ -294,7 +294,7 @@ export class RoomManager {
 
     // hack for lobby room
     if (room instanceof LobbyRoom) {
-      room.getRooms = (names: string[]) => this.server.getRooms(names)
+      room.getRooms = (names: string[]) => this.getAvaliableRooms(names)
       this.inspector.subscribe(room.id, room.watch, (roomId, data) => room.onRoomUpdate(roomId, data))
     }
 

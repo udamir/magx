@@ -20,5 +20,4 @@ export interface IStateTracker<T> {
   onPatch(listner: PatchListener<T>, params?: any): IDisposer
   snapshot(params?: any): { [key: string]: any }
   dispose(): void
-  decodeMap(serializer?: string): any
 }

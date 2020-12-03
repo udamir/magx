@@ -82,8 +82,8 @@ export abstract class Client<T = any> {
   }
 
   // send state snapshot
-  public snapshot(snapshot: any, schema?: any) {
-    this.emit(ClientEvent.snapshot, snapshot, schema)
+  public snapshot(snapshot: any) {
+    this.emit(ClientEvent.snapshot, snapshot)
   }
 
   public error(code?: number, message?: string) {

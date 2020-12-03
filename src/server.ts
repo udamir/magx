@@ -50,7 +50,7 @@ export interface IServerParams<T extends Transport> {
  * MagX Server - Multiplayer authoritative game server
  */
 
-export class Server<C extends Client = Client, T extends Transport<C> = Transport> extends EventEmitter {
+export class Server<C extends Client = Client, T extends Transport<C> = Transport> {
   // http server
   public httpServer: http.Server | null = null
 
@@ -82,7 +82,6 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
   public connectionTimeout: number
 
   constructor(httpServer?: http.Server, params?: IServerParams<T>) {
-    super()
     params = params || {} as IServerParams<T>
 
     this.processId = params.processId || process.pid
@@ -157,52 +156,5 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
   public attach(httpServer: http.Server) {
     this.httpServer = httpServer
     this.router.inject(httpServer)
-  }
-
-  // authenticate user to get auth token
-  public async authenticate(data?: any, id?: string): Promise<IAuth> {
-    console.debug(`>> Process ${this.processId}: Authenticate client ${id}`)
-    id = id || this.generator(data)
-    return this.auth.sign(id, data)
-  }
-
-  // validate token
-  public async verify(token: string): Promise<IAuth | null> {
-    console.debug(`>> Process ${this.processId}: Verify client token ${token}`)
-    return this.auth.verify(token)
-  }
-
-  // get room
-  public async getRoom(roomId: string): Promise<IRoomObject | null> {
-    return this.rooms.getRoomObject(roomId)
-  }
-
-  // get all created rooms
-  public async getRooms(name: string | string[]): Promise<IRoomObject[]> {
-    return this.rooms.getAvaliableRooms(name)
-  }
-
-  // create new room and join
-  public async createRoom(clientId: string, name: string, options?: any): Promise<IRoomObject> {
-    return this.balancer.createRoom(clientId, name, options)
-  }
-
-  // join created room
-  public async joinRoom(clientId: string, roomId: string, options?: any): Promise<IRoomObject> {
-    return this.balancer.joinRoom(clientId, roomId, options)
-  }
-
-  public async updateRoom(clientId: string, roomId: string, update: IRoomUpdate): Promise<IRoomObject> {
-    return this.balancer.updateRoom(clientId, roomId, update)
-  }
-
-  // leage room
-  public async leaveRoom(clientId: string, roomId: string): Promise<void> {
-    return this.balancer.leaveRoom(clientId, roomId)
-  }
-
-  // close room
-  public async closeRoom(clientId: string, roomId: string): Promise<void> {
-    return this.balancer.closeRoom(clientId, roomId)
   }
 }

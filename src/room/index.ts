@@ -145,7 +145,7 @@ export abstract class Room<T = any> {
     this.disposers.set(client.id, { trackerDisposer, patchInterval })
 
     // send state with client
-    this.sendState(client, this.tracker.decodeMap(params.serializer))
+    this.sendState(client)
   }
 
   public stopTracking(client: RoomClient) {
@@ -159,7 +159,7 @@ export abstract class Room<T = any> {
     this.disposers.delete(client.id)
   }
 
-  public sendState(client: RoomClient, schema?: any) {
+  public sendState(client: RoomClient) {
 
     if (!this.tracker) {
       throw new Error("State tracker is not defined!")
@@ -167,7 +167,7 @@ export abstract class Room<T = any> {
 
     // send snapshot
     const snapshot = this.tracker.snapshot(client.state.trackingParams)
-    client.snapshot(snapshot, schema)
+    client.snapshot(snapshot)
   }
 
   public updateTrackingParams(client: RoomClient, params: ITrackerParams) {

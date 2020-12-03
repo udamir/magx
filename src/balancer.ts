@@ -104,6 +104,6 @@ export class LoadBalancer {
   }
 
   public async closeRoom(sessionId: string, roomId: string): Promise<void> {
-    return this.ipcm.requestProcess("closeRoom", roomId, { sessionId, roomId })
+    return this.makeRequest("closeRoom", roomId, { sessionId, roomId })
   }
 }

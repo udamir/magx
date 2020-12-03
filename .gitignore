@@ -102,7 +102,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Documents
-docs
+.docs
 test
 
 dist
