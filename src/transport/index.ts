@@ -39,7 +39,7 @@ export const ClientEvent = {
 }
 
 export type ClientStatus = "connecting" | "connected" | "disconnected" | "reconnected"
-export type EventArgs = [ event: number, ...args: any ]
+export type EventArgs = [ number, ...any[] ]
 
 export abstract class Client<T = any> {
   // client session
