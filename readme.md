@@ -51,17 +51,22 @@ npm install --save magx
 2. Create a simple chat room handler (chatRoom.ts):
 ```typescript
 import { Room, Client } from "magx"
+
 export class ChatRoom extends Room {
+
   public onMessage(client: Client, type: string, data: any) {
     console.log("ChatRoom received message from", client.id, ":", data)
     this.broadcast("messages", `(${client.id}) ${data}`)
   }
+  
   public onJoin(client: Client) {
     this.broadcast("messages", `${ client.id } joined.`)
   }
+  
   public onLeave(client: Client) {
     this.broadcast("messages", `${ client.id } left.`)
   }
+  
   public onClose() {
     console.log("ChatRoom closed!")
   }
@@ -73,9 +78,12 @@ export class ChatRoom extends Room {
 import * as http from "http"
 import { Server } from "magx"
 import { ChatRoom } from "./chatRoom"
+
 const server = http.createServer()
+
 const magx = new Server(server)
 magx.define("chat", ChatRoom)
+
 const port = process.env.PORT || 3001
 server.listen(port, () => {
   console.log(`Magx server started on http://localhost:${port}`)
@@ -116,24 +124,29 @@ Chat server is ready!
 ```js
 const { host, port, protocol } = window.document.location
 var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:" })
+
 client.authenticate()
   .then(() => client.getRooms("chat"))
   .then(rooms => rooms.length ? client.joinRoom(rooms[0].id) : client.createRoom("chat"))
   .then(room => {
     console.log("joined")
+    
     // listen to messages coming from the server
     room.onMessage("messages", (message) => {
       var p = document.createElement("p");
       p.innerText = message;
       document.querySelector("#messages").appendChild(p);
     })
+    
     // send message to room on submit
     document.querySelector("#form").onsubmit = function(e) {
       e.preventDefault();
       var input = document.querySelector("#input");
       console.log("input:", input.value);
+      
       // send data to room
       room.send("message", input.value);
+      
       // clear input
       input.value = "";
     }
