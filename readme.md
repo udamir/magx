@@ -102,18 +102,14 @@ Chat server is ready!
       <input type="text" id="input" value="" autofocus/>
       <input type="submit" value="send" />
     </form>
-## Documentation
-https://udamir.github.io/magx/
 
     <div id="messages"></div>
-## Examples
 
     <script>
       // add js code here
     </script>
   </body>
 </html>
-The easiest way to try out Magx is using the [magx-example](https://github.com/udamir/magx-examples) project:
 ```
 
 5. Connect to MagX server, authenticate and join ChatRoom:
