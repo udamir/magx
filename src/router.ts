@@ -14,6 +14,7 @@ export interface IRequestContext {
   payload?: any
   auth?: any
   // response
+  attachment?: string
   status?: number
   body?: any
   buffer?: string
@@ -134,7 +135,7 @@ export class Router {
 
     req.on("end", async () => {
       buffer += decoder.end()
-      if (req.headers["content-type"]?.includes("application/json")) {
+      if (req.headers["content-type"] === "application/json") {
         ctx.payload = JSON.parse(buffer)
       } else {
         ctx.payload = buffer
@@ -150,11 +151,13 @@ export class Router {
         "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Max-Age": 2592000,
-        // ...
       }
 
-      if (ctx.buffer && ctx.type === ".html") {
-        headers["Content-Type"] = "text/html; charset=utf-8"
+      if (ctx.attachment) {
+        headers["Content-Disposition"] = `attachment; filename=${ctx.attachment}`
+      }
+      if (ctx.buffer) {
+        headers["Content-Type"] = `text/${ctx.type}; charset=utf-8`
       } else if (ctx.body) {
         headers["Content-Type"] = "application/json"
       }
@@ -187,7 +190,7 @@ export class Router {
     const path = join(...paths)
     return async (ctx: IRequestContext): Promise<void> => {
       try {
-        ctx.type = extname(path)
+        ctx.type = extname(path).slice(1)
         ctx.buffer = await readFileSync(path, { encoding: "utf-8" })
       } catch (error) {
         ctx.status = 404
