@@ -135,7 +135,7 @@ export class Router {
 
     req.on("end", async () => {
       buffer += decoder.end()
-      if (req.headers["content-type"] === "application/json") {
+      if (req.headers["content-type"]?.includes("application/json")) {
         ctx.payload = JSON.parse(buffer)
       } else {
         ctx.payload = buffer
