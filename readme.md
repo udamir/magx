@@ -158,6 +158,9 @@ Simple chat is ready! You can open several tabs, send and recieve messags.
 ## Documentation
 soon...
 
+## Roadmap
+https://github.com/udamir/magx/wiki
+
 ## License
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fudamir%2Fmagx.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fudamir%2Fmagx?ref=badge_large)
