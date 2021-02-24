@@ -324,8 +324,14 @@ export class RoomManager {
 
     const client = room.clients.get(sessionId)
     if (!client) {
+      if (!room.onAuth || await room.onAuth(sessionId, options)) {
+        // client not authorized to join the room
+        throw new Error(`Client ${sessionId} not authorized to join the room`)
+      }
+
       // reserve seat for client
       this.reserveSeat(roomId, sessionId, options)
+
     } else if (client && client.status !== "disconnected") {
       // client already in room
       throw new Error(`Client ${sessionId} already in room`)

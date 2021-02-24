@@ -212,6 +212,7 @@ export abstract class Room<T = any> {
   // Optional abstract methods
   public createState?(): T
   public createPatchTracker?(state: T): IStateTracker<T>
+  public onAuth?(sessionId: string, params: any): void | Promise<boolean>
   public onJoin?(client: RoomClient, params: any): void | Promise<void>
   public onMessage?(client: RoomClient, type: string, data: any): void
   public onLeave?(client: RoomClient, consented?: boolean): void | Promise<void>
