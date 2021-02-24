@@ -134,7 +134,7 @@ export class RoomManager {
         return client.error(ErrorCode.ReservationExpired, "Reservation expired")
       }
 
-      const { options, disposer } = this.reservedSeats.get(reservationId)
+      const { options, disposer, auth } = this.reservedSeats.get(reservationId)
       // dispose resevation timout
       clearTimeout(disposer)
       // remove reservation
@@ -145,7 +145,7 @@ export class RoomManager {
 
         // trigger room.onJoin(client)
         try {
-          room.onJoin && await room.onJoin(client, options)
+          room.onJoin && await room.onJoin(client, options, auth)
         } catch (error) {
           return client.error(ErrorCode.JoinError, error.message)
         }
@@ -196,7 +196,7 @@ export class RoomManager {
   }
 
   // reserve seat for client
-  public async reserveSeat(roomId: string, sessionId: string, options: any) {
+  public async reserveSeat(roomId: string, sessionId: string, options: any, auth: any) {
     console.debug(`>> Process ${this.server.processId} requested: Reserve seat for client ${sessionId} in room`, roomId)
     // get room
     const room = this.rooms.get(roomId)
@@ -227,7 +227,7 @@ export class RoomManager {
     }, this.reservationTimeout * 1000)
 
     // save reservation
-    this.reservedSeats.set(roomId + "-" + sessionId, { options, disposer })
+    this.reservedSeats.set(roomId + "-" + sessionId, { options, disposer, auth })
 
     console.debug(`>> Process ${this.server.processId} requested: Save room ${roomId} to cache`)
     // update room cache
@@ -324,13 +324,11 @@ export class RoomManager {
 
     const client = room.clients.get(sessionId)
     if (!client) {
-      if (!room.onAuth || await room.onAuth(sessionId, options)) {
-        // client not authorized to join the room
-        throw new Error(`Client ${sessionId} not authorized to join the room`)
-      }
+      // get user autherization to join the room
+      const auth = room.onAuth && await room.onAuth(sessionId, options)
 
       // reserve seat for client
-      this.reserveSeat(roomId, sessionId, options)
+      this.reserveSeat(roomId, sessionId, options, auth)
 
     } else if (client && client.status !== "disconnected") {
       // client already in room
