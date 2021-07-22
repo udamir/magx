@@ -1,6 +1,6 @@
 {
   "name": "magx",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "description": "Multiplayer game server framework",
   "author": "Damir Yusipov",
   "license": "MIT",
@@ -27,16 +27,22 @@
   },
   "dependencies": {
     "notepack.io": "^2.3.0",
-    "ws": "^7.3.1"
+    "ws": "^7.5.3"
+  },
+  "peerDependencies": {
+    "ioredis": "^4.26.0",
+    "mongodb": "^4.0.1"
   },
   "devDependencies": {
-    "@types/node": "^11.15.27",
-    "@types/ws": "^7.2.7",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.4.1",
+    "@types/mongodb": "^3.6.20",
+    "@types/ioredis": "^4.26.6",
+    "@types/node": "^11.15.54",
+    "@types/ws": "^7.4.7",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.6",
     "ts-node": "^8.10.2",
     "tslint": "^5.20.1",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.10"
   },
   "jest": {
     "transform": {

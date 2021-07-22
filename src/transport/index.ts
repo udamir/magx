@@ -91,8 +91,8 @@ export abstract class Client<T = any> {
   }
 
   // add message listner
-  public onMessage(listner: MessageListener) {
-    this.on(ClientEvent.message, listner)
+  public onMessage(listener: MessageListener) {
+    this.on(ClientEvent.message, listener)
   }
 
   // send state patch

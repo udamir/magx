@@ -1,14 +1,9 @@
 /**
- * Abstract class for inter-process communication in cluster
+ * Abstract class for process discovery and communication
  */
 
-export interface IPCParams {
-  timeout?: number
-  processId: string
-}
-
-export type IPCRequestHandler = (data: any) => Promise<any>
-export type ProcessListner<T> = (data: T) => void
+export type IPCRequestHandler<T = any> = (data: any) => Promise<T>
+export type ProcessListener<T> = (data: T) => void
 
 export interface IProcessRequest {
   requestId: string
@@ -21,23 +16,70 @@ export interface IProcessResponse {
   data?: any
 }
 
-export abstract class IPCManager {
+export interface IProcessState {
+  [key: string]: any
+}
+
+export interface IPCParams<T extends IProcessState> {
+  timeout?: number
+  state?: T
+  processId: string
+  healthCheckInterval?: number
+}
+
+export interface IProcessInstance<T extends IProcessState> {
+  ttl: number
+  state: T
+}
+
+export interface IProcessInfo<T extends IProcessState> {
+  id: string
+  state: T
+}
+
+export abstract class IPCManager<S extends IProcessState = any> {
   public processId: string
   public timeout: number
+  public healthCheckInterval: number
   public requestHandlers: { [method: string]: IPCRequestHandler }
+  public state: S
+  public instances: Map<string, IProcessInstance<S>>
+  private healthCheckTimeout?: NodeJS.Timeout
 
-  constructor(params: IPCParams) {
+  constructor(params: IPCParams<S>) {
     this.processId = params.processId
     this.timeout = params.timeout || 1000
     this.requestHandlers = {}
+    this.instances = new Map<string, IProcessInstance<S>>()
+    this.healthCheckInterval = params?.healthCheckInterval || 30000
+    this.state = params?.state || {} as S
   }
 
   public init() {
+    this.subscribe("instance:add", (id: string) => {
+      // handle new instance
+      this.addInstance(id)
+      console.log(`Process ${this.processId}: added instance ${id} [${this.instances.size}]`)
+
+      this.publish(`${id}:discovery`, { id: this.processId, state: this.state })
+    })
+
+    this.subscribe("instance:delete", (id: string) => {
+      this.deleteInstance(id)
+    })
+
+    this.subscribe(`${this.processId}:discovery`, ({ id, state }: IProcessInfo<S>) => {
+      if (id === this.processId) { return }
+      this.addInstance(id)
+      console.log(`Process ${this.processId}}: added instance ${id} [${this.instances.size}]`)
+      this.updateInstanceState(id, state)
+    })
+
     this.subscribe(`ipc-request:${this.processId}`, (request: IProcessRequest) => {
       const { requestId, method , data } = request
-      const listner = this.requestHandlers[method]
-      if (!listner) { return }
-      listner(data)
+      const listener = this.requestHandlers[method]
+      if (!listener) { return }
+      listener(data)
         .then((result: any) => {
           this.publish(`ipc-response:${requestId}`, { data: result })
         })
@@ -45,9 +87,73 @@ export abstract class IPCManager {
           this.publish(`ipc-response:${requestId}`, { error })
         })
     })
+
+    this.instances.set(this.processId, { state: this.state, ttl: -1 })
+    this.publish("instance:add", this.processId)
+    this.startHealthCheck()
   }
 
-  public async requestProcess<T, R>(id: string | number, method: string, data: T): Promise<R> {
+  public startHealthCheck() {
+    if (this.healthCheckTimeout) {
+      this.stopHealthCheck()
+    }
+
+    this.healthCheckTimeout = setInterval(() => {
+      // send instance info
+      this.publishState()
+
+      // check instances health
+      for (const [id, { ttl }] of this.instances.entries()) {
+        if (ttl > 0 && ttl < Date.now()) {
+          this.deleteInstance(id)
+        }
+      }
+    }, this.healthCheckInterval)
+  }
+
+  public terminate() {
+    this.publish("instance:delete", this.processId)
+    close()
+  }
+
+  public stopHealthCheck() {
+    if (!this.healthCheckTimeout) { return }
+    clearInterval(this.healthCheckTimeout)
+    this.healthCheckTimeout = undefined
+  }
+
+  public publishState() {
+    // publish state
+    this.publish(`${this.processId}:info`, this.state)
+  }
+
+  private addInstance(id: string) {
+    this.subscribe(`${id}:info`, (state: S) => {
+      if (id === this.processId) { return }
+      // on instance info
+      this.updateInstanceState(id, state)
+    })
+  }
+
+  private updateInstanceState(id: string, state: S) {
+    const ttl = Date.now() + this.healthCheckInterval * 2
+    this.instances.set(id, { state, ttl })
+
+    if (this.instances.size > 1 && !this.healthCheckTimeout) {
+      this.startHealthCheck()
+    }
+  }
+
+  private deleteInstance(id: string) {
+    this.unsubscribe(`${id}:info`)
+    this.instances.delete(id)
+
+    if (this.instances.size < 2) {
+      this.stopHealthCheck()
+    }
+  }
+
+  public async requestProcess<L, R>(id: string | number, method: string, data: L): Promise<R> {
     return new Promise((resolve, reject) => {
       const requestId = Date.now().toString(36) + Math.random().toString(36).slice(3)
 
@@ -78,9 +184,12 @@ export abstract class IPCManager {
     this.requestHandlers[method] = handler
   }
 
-  public abstract pids(): Promise<string[]>
-  public abstract subscribe(channel: string, listner: ProcessListner<any>): void
-  public abstract unsubscribe(channel: string): void
-  public abstract publish(channel: string, data: any): void
+  public pids(): string[] {
+    return [ ...this.instances.keys() ]
+  }
 
+  public abstract subscribe<T>(channel: string, listener: ProcessListener<T>): void
+  public abstract unsubscribe(channel: string): void
+  public abstract publish<T>(channel: string, data: T): void
+  public abstract close(): void
 }

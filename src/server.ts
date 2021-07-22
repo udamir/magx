@@ -1,13 +1,12 @@
-import { EventEmitter } from "events"
 import * as http from "http"
 
 import {
   api, Router,
   ICache, LocalCache,
-  RoomManager, RoomClass, IRoomObject, IRoomUpdate,
+  RoomManager, RoomClass, IRoomObject,
   WebSocketTransport,
   Client, Transport, ErrorCode,
-  IAuthManager, SessionAuth, IAuth,
+  IAuthManager, SessionAuth,
   IPCManager, LocalManager,
   LoadBalancer,
 } from "./internal"
@@ -97,9 +96,9 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
     this.connectionTimeout = params.connectionTimeout || 1000
 
     // handle connection of client
-    this.transport.on("connect", async (client: C, token: string) => {
+    this.transport.on("connect", async (client: C, query: string) => {
       // get session by token
-      const auth = await this.auth.verify(token)
+      const auth = await this.auth.verify(query)
 
       if (!auth) {
         // terminate client without session
@@ -108,7 +107,6 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
 
       // save session to client
       client.auth = auth
-
       // connct client to room
       this.rooms.onClientConnected(client)
     })

@@ -53,7 +53,7 @@ export class WebSocketTransport extends Transport<WebSocketClient> {
     super()
 
     // create websocket server
-    this.wss = new WebSocket.Server({ port: options.port, server: options.server })
+    this.wss = new WebSocket.Server({ port: options.port })
 
     this.messagePack = options.messagePack || notepack
 

@@ -44,7 +44,7 @@ export class RoomInspector {
         this.subscribers[name] = new Map()
         // subscribe for room_update:{name}
         log.debug(`>> Process ${this.ipcm.processId}: Subscribe for room_update:${name}`)
-        this.ipcm.subscribe(`room_update:${name}`, (roomId) => this.onRoomUpdate(name, roomId))
+        this.ipcm.subscribe<string>(`room_update:${name}`, (roomId: string) => this.onRoomUpdate(name, roomId))
       }
       this.subscribers[name].set(id, subscriber)
     })

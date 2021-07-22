@@ -1,7 +1,8 @@
-import { IPCManager, ProcessListner } from "../../internal"
+import { IProcessState } from ".."
+import { IPCManager, ProcessListener } from ".."
 
-export class LocalManager extends IPCManager {
-  public channels: { [id: string]: ProcessListner<any> } = {}
+export class LocalManager<S extends IProcessState> extends IPCManager<S> {
+  public channels: { [id: string]: ProcessListener<any> } = {}
 
   constructor() {
     super({
@@ -9,7 +10,7 @@ export class LocalManager extends IPCManager {
     })
   }
 
-  public async requestProcess<T, R>(id: string | number, method: string, data: T): Promise<R> {
+  public async requestProcess<T>(id: string | number, method: string, data: T): Promise<any> {
     const listener = this.requestHandlers[method]
     if (!listener) {
       throw new Error(`Process ${id} cannot execute ${method} - method  not found.`)
@@ -17,12 +18,8 @@ export class LocalManager extends IPCManager {
     return listener(data)
   }
 
-  public async pids(): Promise<string[]> {
-    return [this.processId]
-  }
-
-  public subscribe(channel: string, listner: ProcessListner<any>): void {
-    this.channels[channel] = listner
+  public subscribe(channel: string, listener: ProcessListener<any>): void {
+    this.channels[channel] = listener
   }
 
   public unsubscribe(channel: string): void {
@@ -30,7 +27,11 @@ export class LocalManager extends IPCManager {
   }
 
   public publish(channel: string, data: any): void {
-    const listner = this.channels[channel]
-    return listner && listner(data)
+    const listener = this.channels[channel]
+    return listener && listener(data)
+  }
+
+  public close() {
+    return
   }
 }

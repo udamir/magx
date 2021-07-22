@@ -69,6 +69,19 @@ export class Router {
     })
   }
 
+  public callback() {
+    return (req: http.IncomingMessage, res: http.ServerResponse) => {
+      // check if requested api route
+      const route = this.has(req.method || "", req.url || "")
+      if (route) {
+        // handle api request
+        this.exec(route, req, res)
+      } else {
+        res.statusCode = 404
+      }
+    }
+  }
+
   public has(reqMethod: string, reqUrl: string): IRoute | null {
     const parsedURL = url.parse(reqUrl, true)
     if (!parsedURL.pathname) {
@@ -148,7 +161,7 @@ export class Router {
       }
       const headers: http.OutgoingHttpHeaders = {
         "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-        "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
+        "Access-Control-Allow-Methods": "OPTIONS, POST, GET, DELETE",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Max-Age": 2592000,
       }
@@ -183,7 +196,7 @@ export class Router {
   }
 
   public delete(path: string, ...handlers: RequestHandler[]) {
-    return this.addRoute("post", path, handlers)
+    return this.addRoute("delete", path, handlers)
   }
 
   public static send(...paths: string[]) {

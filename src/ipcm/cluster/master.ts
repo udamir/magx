@@ -1,9 +1,6 @@
 import { Worker } from "cluster"
 
 import { IProcessRequest, IProcessResponse } from ".."
-import { logger } from "../../internal"
-
-const log = logger("ipcm/cluster", 33)
 
 export interface IWorkerMessage {
   event: string
@@ -52,23 +49,14 @@ export class IPCMaster {
     const { event, processId, channel, data } = message
 
     switch (event) {
-      case "pids": return this.onPids(processId)
+      // case "pids": return this.onPids(processId)
       case "subscribe": return this.onSubscribe(processId, channel)
       case "unsubscribe": return this.onUnsubscribe(processId, channel)
       case "publish": return this.onPublish(processId, channel, data)
     }
   }
 
-  public onPids(processId: string): void {
-    if (!this.workers[processId]) {
-      log.error(10, `Worker with pid ${processId} not found`)
-      return
-    }
-    this.workers[processId].send({ channel: "", data: Object.keys(this.workers) })
-  }
-
   public onSubscribe(processId: string, channel: string): void {
-    log.debug(`Process ${processId} subscribed for ${channel}`)
     // init subscription channel
     if (!this.subscribers[channel]) {
       this.subscribers[channel] = new Set()
@@ -78,7 +66,6 @@ export class IPCMaster {
   }
 
   public onUnsubscribe(processId: string, channel: string): void {
-    log.debug(`Process ${processId} unsubscribed from ${channel}`)
     if (!this.subscribers[channel]) { return }
 
     // delete process from subscribers
@@ -91,7 +78,6 @@ export class IPCMaster {
   }
 
   public onPublish(processId: string, channel: string, data: IProcessRequest | IProcessResponse): void {
-    log.debug(`Process ${processId} published data to ${channel} for subscribers`, this.subscribers[channel])
     if (!this.subscribers[channel]) { return }
 
     // send data to all subscribers
@@ -100,7 +86,6 @@ export class IPCMaster {
       // don't send data back to publisher
       // if (pid === processId) { continue } TODO: test case
 
-      console.log(`Request ${channel} forwarded to worker ${pid}`)
       this.workers[pid].send({ channel, data })
     }
   }
