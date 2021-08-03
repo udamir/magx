@@ -260,7 +260,7 @@ export class RoomManager {
     const { roomClass, params } = this.roomTypes[name]
     const room = new roomClass({
       pid: this.server.processId,
-      port: this.server.transport.port,
+      port: this.server.transport.proxyPort,
       hostId: sessionId,
       name,
     })
