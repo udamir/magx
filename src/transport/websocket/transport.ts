@@ -6,8 +6,6 @@ import url from "url"
 
 import { Transport, WebSocketClient, IWebSocketClientData } from "../../internal"
 
-const DEFAULT_PORT = 8000
-
 const noop = () => {/* tslint:disable:no-empty */ }
 
 export interface IMessagePack {
@@ -49,10 +47,14 @@ export class WebSocketTransport extends Transport<WebSocketClient> {
   public pingTimeout: NodeJS.Timeout | undefined
   public clientRequestTimeout: number
   public messagePack: IMessagePack
-  public proxyPort: number
+  public _proxyPort: number | undefined
 
   public get port() {
-    return this.wss.options.port || DEFAULT_PORT
+    return this.wss.options.port
+  }
+
+  public get proxyPort() {
+    return this._proxyPort || this.port
   }
 
   constructor(options: IWebSocketTransportOptions) {
@@ -60,7 +62,7 @@ export class WebSocketTransport extends Transport<WebSocketClient> {
 
     // create websocket server
     this.wss = new WebSocket.Server({ port: options.port, server: !options.port ? options.server : undefined })
-    this.proxyPort = options.proxyPort || this.wss.options.port || DEFAULT_PORT
+    this._proxyPort = options.proxyPort
 
     this.messagePack = options.messagePack || notepack
 

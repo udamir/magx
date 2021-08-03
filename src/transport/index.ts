@@ -147,8 +147,8 @@ export abstract class Transport<T extends Client = any> extends EventEmitter {
     this.emit("disconnect", client, code)
   }
 
-  abstract get port(): number
-  abstract get proxyPort(): number
+  abstract get port(): number | undefined
+  abstract get proxyPort(): number | undefined
 
   public abstract terminate(): void
 }
