@@ -155,4 +155,11 @@ export class Server<C extends Client = Client, T extends Transport<C> = Transpor
     this.httpServer = httpServer
     this.router.inject(httpServer)
   }
+
+  // gracefull shutdown
+  public async close() {
+    await this.rooms.closeRooms()
+    this.ipcm.terminate()
+    this.transport.terminate()
+  }
 }

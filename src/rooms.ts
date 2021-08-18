@@ -435,4 +435,10 @@ export class RoomManager {
       this.inspector.unsubscribe(room.id, room.watch)
     }
   }
+
+  public async closeRooms() {
+    for (const room of this.rooms.values()) {
+      await this.closeRoom({ sessionId: room.hostId, roomId: room.id })
+    }
+  }
 }
