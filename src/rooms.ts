@@ -244,7 +244,17 @@ export class RoomManager {
   public async getAvaliableRooms(name: string | string[] = []): Promise<IRoomObject[]> {
     console.debug(`>> Process ${this.server.processId}: Get avalible rooms ${name}`)
     if (!Array.isArray(name)) { name = [name] }
-    const rooms = await this.cache.findMany()
+    const cachedRooms = await this.cache.findMany()
+
+    const rooms: IRoomObject[] = []
+    for (const room of cachedRooms) {
+      if (!this.server.ipcm.instances.has(String(room.pid))) {
+        await this.cache.remove(room.id)
+      } else {
+        rooms.push(room)
+      }
+    }
+
     return name.length ? rooms.filter((room) => name.indexOf(room.name) >= 0) : rooms
   }
 
