@@ -146,8 +146,8 @@ export class RoomManager {
         // trigger room.onJoin(client)
         try {
           room.onJoin && await room.onJoin(client, options, auth)
-        } catch (error) {
-          return client.error(ErrorCode.JoinError, error.message)
+        } catch (error: any) {
+          return client.error(ErrorCode.JoinError, error?.message || JSON.stringify(error))
         }
 
         this.setRoomClient(room, client)
@@ -248,8 +248,9 @@ export class RoomManager {
 
     const rooms: IRoomObject[] = []
     for (const room of cachedRooms) {
-      if (!this.server.ipcm.instances.has(String(room.pid))) {
-        await this.cache.remove(room.id)
+      const pid = String(room.pid)
+      if (this.server.ipcm.processId !== pid && !this.server.ipcm.instances.has(pid)) {
+        await this.cache.remove(pid)
       } else {
         rooms.push(room)
       }
