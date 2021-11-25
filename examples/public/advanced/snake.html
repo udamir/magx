@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MultiPlayer Snake</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+</head>
+<body>
+  <section class="vh-100">
+    <div class="container h-100">
+
+      <div id="initialScreen" class="h-100">
+        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+          <h1>Multiplayer Snake</h1>
+          <button type="submit" class="btn btn-success" id="newGameButton">
+            Create New Game
+          </button>
+          <div>OR</div>
+          <div class="form-group">
+            <input type="text" placeholder="Enter Game Code" id="gameCodeInput" />
+          </div>
+          <button type="submit" class="btn btn-success" id="joinGameButton">
+            Join Game
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="h-100" style="display: none;">
+        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+          <h1>Your game code is: <span id="gameCodeDisplay"></span></h1>
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="text/javascript" src="/magx"></script>
+  <script>
+    const BG_COLOUR = '#231f20'
+    const SNAKE_COLOUR = '#c2c2c2'
+    const FOOD_COLOUR = '#e66916'
+
+    const gameScreen = document.getElementById('gameScreen')
+    const initialScreen = document.getElementById('initialScreen')
+    const newGameBtn = document.getElementById('newGameButton')
+    const joinGameBtn = document.getElementById('joinGameButton')
+    const gameCodeInput = document.getElementById('gameCodeInput')
+    const gameCodeDisplay = document.getElementById('gameCodeDisplay')
+
+    const canvas = document.getElementById('canvas')
+    canvas.width = canvas.height = 600
+    const ctx = canvas.getContext('2d')
+    
+    const { host, port, protocol } = window.document.location
+    const serializer = MagX.SchemaSerializer
+    const client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:", serializer })
+
+    const paintGame = (state) => {
+      ctx.fillStyle = BG_COLOUR;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const gridsize = state.gridSize;
+      const size = canvas.width / gridsize;
+      // paint food
+      for (const f of state.food) {
+        ctx.fillStyle = FOOD_COLOUR
+        ctx.fillRect(f.x * size, f.y * size, size, size)
+      }
+      // paint players
+      Object.keys(state.players).forEach(id => {
+        const color = id === client.auth.id ? SNAKE_COLOUR : "red"
+        const snake = state.players[id].snake
+        ctx.fillStyle = color
+        for (let cell of snake) {
+          ctx.fillRect(cell.x * size, cell.y * size, size, size)
+        }
+      })
+    }
+
+    const initRoom = (room) => {
+      let state = {}
+
+      // add state snapshot handler
+      room.onSnapshot((snapshot) => {
+        state = snapshot
+        paintGame(state)
+      })
+
+      room.onPatch(() => {
+        // paint game on state change
+        requestAnimationFrame(() => paintGame(state))
+      })
+
+      // add change handlers
+      room.onChange("add", "food/:index", (patch, { index }) => state.food.push(patch.value))
+      room.onChange("remove", "food/:index", (patch, { index }) => state.food.splice(index, 1))
+
+      room.onChange("add", "players/:id", (patch, { id }) => state.players[id] = patch.value)
+      room.onChange("remove", "players/:id", (patch, { id }) => delete state.players[id])
+
+      room.onChange("add", "players/:id/snake/:index", (patch, { id, index }) => state.players[id].snake[index] = patch.value)
+      room.onChange("remove", "players/:id/snake/:index", (patch, { id, index }) => state.players[id].snake.splice(index, 1))
+
+      room.onChange("replace", "looser", ({ value }) => {
+        alert(value === client.auth.id ? 'You Lose :(' : 'You Win!')
+        initialScreen.style.display = "block"
+        gameScreen.style.display = "none"
+        room.leave()
+      })
+
+      // draw game screen
+      gameCodeDisplay.innerText = room.id;
+
+      initialScreen.style.display = "none"
+      gameScreen.style.display = "block"
+
+      ctx.fillStyle = BG_COLOUR;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      window.addEventListener("keydown", ({ which }) => {
+        switch (which) {
+          case 37: return room.send("keypress", 0) // LEFT
+          case 38: return room.send("keypress", 1) // Up
+          case 39: return room.send("keypress", 2) // RIGHT
+          case 40: return room.send("keypress", 3) // DOWN
+        }
+      })
+    }
+
+    newGameBtn.addEventListener('click', async () => {
+      const room = await client.createRoom("snake") // create new room
+      initRoom(room)
+    })
+
+    joinGameBtn.addEventListener('click', async () => {
+      const roomId = gameCodeInput.value
+      const room = await client.joinRoom(roomId) // join existing room
+      if (!room) { return }
+      initRoom(room)
+    })
+
+    try {
+      client.authenticate()
+    } catch (error) {
+      console.log(error)
+    }
+  </script>
+</body>
+
+</html>

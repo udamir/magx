@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="viewport" content="width=device-width" />
+
+  <style>
+    body {
+      font-family: Tahoma, Geneva, sans-serif;
+    }
+  </style>
+
+  <style type="text/css">
+    .player {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      padding-top: 24px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <p>This example shows how to create relay server with mobx state. Use arrows to move</p>
+  <!-- magx client -->
+  <script type="text/javascript" src="/magx"></script>
+  <!-- mobx state management -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mobx/5.15.7/mobx.min.js"></script>
+  <script>
+    const { host, port, protocol } = window.document.location
+    var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:" })
+
+    const colors = ['red', 'green', 'yellow', 'blue', 'cyan', 'magenta']
+    let room = null 
+    const players = {}
+
+    const addPlayer = (id, player) => {
+      var el = document.createElement("div")
+      el.className = "player"
+      el.style.left = player.x + "px"
+      el.style.top = player.y + "px"
+      el.style.background = player.color
+      el.innerText = "Player " + player.name
+
+      player.el = el
+      players[id] = player
+      document.body.appendChild(el);
+    }
+
+    const removePlayer = (id) => {
+      if (players[id].el) {
+        document.body.removeChild(players[id].el);
+      }
+      delete players[id];
+    }
+
+    const updatePlayer = (id, key, value) => {
+      players[id][key] = value
+      drawPlayer(players[id])
+    }
+
+    const drawPlayer = (player) => {
+      player.el.style.left = player.x + "px"
+      player.el.style.top = player.y + "px"
+    }
+
+    const movePlayer = (dim, shift) => {
+      const { id } = client.auth
+      const player = players[id]
+      player[dim] = player[dim] + shift * 10
+
+      // you can patch state without limitation, all other players will get this patch
+      room.send("patch_state", {
+        op: "replace",
+        path: "/players/" + id + "/" + dim,
+        value: player[dim],
+      })
+      drawPlayer(player)
+    }
+
+    const setState = (state) => {
+      // all joined players added to state.players on server
+      Object.keys(state.players).forEach((id) => {
+        players[id] = { ...players[id], ...state.players[id] }
+        players[id].el ? drawPlayer(players[id]) : addPlayer(id, players[id])
+      })
+    }
+
+    const updateState = (patch) => {
+      // patch type IJson patch, check http://jsonpatch.com/ for details
+      const path = patch.path.substr(1).split("/")
+      const key = path.pop()
+
+      switch (patch.op) {
+        case "add": return addPlayer(key, patch.value)
+        case "replace": return updatePlayer(path[1], key, patch.value)
+        case "remove": return removePlayer(key)
+      }
+    }
+
+    const init = async () => {
+      // authenticate to server
+      await client.authenticate({ name })
+
+      // init player params
+      const params = {
+        name: Math.random().toString(32).slice(3),
+        x: Math.floor(Math.random() * 400),
+        y: Math.floor(Math.random() * 400),
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }
+
+      // create or join room
+      const rooms = await client.getRooms("relay")
+      room = rooms.length 
+        ? await client.joinRoom(rooms[0].id, params)
+        : await client.createRoom("relay", params)
+      console.log("you joined room", name)
+
+      // handle state patches
+      room.onPatch((patch) => updateState(patch))
+      // handle state snapshot
+      room.onSnapshot((snapshot) => setState(snapshot))
+
+      // handle joined players
+      room.onMessage("player_join", (id) => console.log("player join", id))
+      // handle left players
+      room.onMessage("player_leave", (id) => console.log("player leave", id))
+
+      window.addEventListener("keydown", ({ which }) => {
+        switch (which) {
+          case 38: return movePlayer("y", -1)
+          case 39: return movePlayer("x",  1)
+          case 40: return movePlayer("y",  1)
+          case 37: return movePlayer("x", -1)
+        }
+      })
+    }
+
+    try {
+      init()
+    } catch (error) {
+      console.log(error)
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+  
+<body>
+  <div id="app">
+    <v-app>
+      <v-main>
+        <v-app-bar dark flat>
+          <v-toolbar-title>Magx monitor: Inspect room {{ roomId }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" @click="exit()">Exit</v-btn>
+        </v-app-bar>
+        <v-row style="height: 100%;">
+          <v-navigation-drawer permanent>
+            <v-list dense nav class="py-0">
+
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Clients</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+  
+              <v-divider></v-divider>
+
+              <v-dialog v-model="sendMessage" max-width="530" >
+                <v-card>
+                  <v-card-title>Send message from: <br/>{{ activeClient && activeClient.id }}</v-card-title>
+
+                  <v-card-text ref="form">
+                      <v-text-field v-model="messageType" label="Type" required></v-text-field>
+                      <v-switch
+                        v-model="messageInputJson"
+                        :label="`Format: ${messageInputJson ? 'Json' : 'string'}`"
+                      ></v-switch>
+                      <v-textarea ref="data" v-model="messageData" label="Data" required :rules="messageInputJson ? [isJson] : []"></v-textarea>
+                  </v-card-text>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+
+                    <v-btn @click="sendMessage = false">
+                      Cancel
+                    </v-btn>
+                    <v-btn @click="sendClientMessage()">
+                      Send
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+
+              <v-list-group
+                v-for="client in clients"
+                :key="client.id"
+                v-model="client.active"
+                no-action
+              >
+                <template v-slot:activator>
+                  <v-list-item-content>
+                    <v-list-item-title v-text="client.name || client.id"></v-list-item-title>
+                  </v-list-item-content>
+                </template>
+
+                <v-list-item readonly >
+                  Actions:
+                  <v-edit-dialog :return-value.sync="client.name"> 
+                    <v-btn icon>
+                      <v-icon>mdi-circle-edit-outline</v-icon>
+                    </v-btn>
+                    <template v-slot:input>
+                      <v-text-field v-model="client.name" single-line ></v-text-field>
+                    </template>
+                  </v-edit-dialog>
+          
+                  <v-btn icon @click="sendMessage=true"> <v-icon>mdi-send-circle-outline</v-icon></v-btn>
+            
+                  <v-btn icon @click="terminateClient(client.id)">
+                    <v-icon>mdi-delete-circle-outline</v-icon>
+                  </v-btn>
+                
+                </v-list-item>
+              </v-list-group>
+            </v-list>
+          </v-navigation-drawer>
+          <v-row>
+            <v-col>
+              <v-card-text class="py-1">Room state:</v-card-text>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-treeview dense :items="stateTree"></v-treeview>
+              </v-card-text>
+            </v-col>
+      
+            <!-- <v-divider vertical></v-divider>
+      
+            <v-col>
+              <v-card-text>
+
+              </v-card-text>
+            </v-col> -->
+              
+          </v-row>
+            
+        </v-row>
+      </v-main>
+    </v-app>
+  </div>
+  <!-- magx client -->
+  <script type="text/javascript" src="/magx"></script>
+  <script type="text/javascript" src="/magx/monitor/js"></script>
+  <!-- vuejs -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>  
+  <!-- vuetifyjs -->
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+  <script> 
+    const { host, port, protocol } = window.document.location
+    var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:", serializer })
+
+    const pathArray = window.location.pathname.split('/')
+    const roomId = pathArray[pathArray.length - 1]
+
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data: () => ({
+        room: null,
+        clients: {},
+        state: {},
+        sendMessage: false,
+        messageInputJson: false,
+        messageType: "",
+        messageData: "",
+      }),
+      computed: {
+        roomId() { return roomId },
+        activeClient() { return Object.values(this.clients).find(active => !!active) },
+        stateTree() {
+          const items = (path, node) => {
+            if (!node) { return [] }
+            if (Array.isArray(node)) {
+              return node.map((item, index) => ({
+                id: path + "/" + index,
+                name: index + (typeof item !== "object" && !Array.isArray(item) ? ": " + item : ""),
+                children: items(path + "/" + index, item)
+              }))
+            } else if (typeof node === "object") {
+              return Object.keys(node).map(key => ({
+                id: path + "/" + key,
+                name: key + (typeof node[key] !== "object" && !Array.isArray(node[key]) ? ": " + node[key] : ""),
+                children: items(path + "/" + key, node[key])
+              }))
+            } else {
+              return []
+            }
+          }
+          return items("", this.state)
+        }
+      },
+      async mounted() {
+        await client.authenticate("monitor")
+        this.room = await client.joinRoom(roomId)
+        if (!this.room) { 
+          this.exit()
+        }
+        this.room.onMessage("client_connected", (client) => {
+          Vue.set(this.clients, client.id, client)
+        })
+        this.room.onMessage("client_disconnected", (client) => {
+          Vue.delete(this.clients, client.id) 
+        })
+        this.room.onSnapshot((snapshot) => {
+          this.state = snapshot
+        })
+        this.room.onPatch((patch) => {
+          this.updateState(patch)
+        })
+      },
+      methods: {
+        exit() {
+          window.location.href = window.location.origin + "/magx/monitor/"
+        },
+        isJson(value) { 
+          try {
+            JSON.parse(value)
+          } catch (error) {
+            return "Data must be in Json format"
+          }
+          return true
+        },
+        sendClientMessage() {
+          if (!this.$refs.data.validate(true)) { return }
+          const clientId = this.activeClient && this.activeClient.id
+          const data = this.messageInputJson ? JSON.parse(this.messageData) : this.messageData
+          this.room.send("client_message", { clientId, type: this.messageType, data })
+          this.sendMessage = false
+        },
+        terminateClient(clientId, type, data) {
+          this.room.send("terminate_client", clientId)
+        },
+        updateState({ op, path, value}) {
+          path = path.substr(1).split("/")
+          const key = path.pop()
+          let obj = this.state
+          path.forEach(id => obj = obj[id])
+
+          switch (op) {
+            case "add": 
+              if (Array.isArray(obj) && +key) {
+                obj.splice(+key, 0, value)
+              } else {
+                Vue.set(obj, key, value)
+              }
+              break;
+            case "replace": 
+              if (Array.isArray(obj) && +key) {
+                Vue.set(obj, +key, value)
+              } else {
+                Vue.set(obj, key, value)
+              }
+              break;
+            case "remove":
+              if (Array.isArray(obj) && +key) {
+                obj.splice(+key, 1)
+              } else {
+                Vue.delete(obj, key)
+              }
+              break;
+          }
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

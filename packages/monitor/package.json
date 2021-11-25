@@ -1,0 +1,30 @@
+{
+  "name": "magx-monitor",
+  "version": "0.0.7",
+  "description": "Monitoring console for Magx server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "patch": "tsc && npm version patch",
+    "major": "tsc && npm version major",
+    "minor": "tsc && npm version minor"
+  },
+  "keywords": [
+    "magx",
+    "monitoring",
+    "mosx"
+  ],
+  "author": "Damir Yusipov",
+  "license": "MIT",
+  "dependencies": {
+    "magx": "^0.5.0",
+    "magx-client": "^0.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.17.5",
+    "ts-node": "^8.10.2",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.10"
+  }
+}

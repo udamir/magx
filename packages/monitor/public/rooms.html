@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+  <div id="app">
+    <v-app>
+      <v-main> 
+        <v-app-bar dark>
+          <v-toolbar-title>Magx monitor: Avaliable rooms</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" @click="refresh()">Refresh rooms list</v-btn>
+        </v-app-bar>
+        <v-expansion-panels accordion v-model="selected">
+          <v-expansion-panel readonly v-for="(room,i) of rooms" :key="i">
+            <v-expansion-panel-header>
+              <v-row no-gutters @click="select(i)">
+                <v-col><v-btn color="green" @click="inspect(room.id)">Inspect<v-icon>mdi-magnify</v-icon></v-btn></v-col>
+                <v-col cols="1"><v-icon>{{ room.locked ? "mdi-lock-outline" : "mdi-lock-open-variant-outline"}} </v-icon></v-col>
+                <v-col>{{ room.name }}</v-col>
+                <v-col>Id: {{ room.id }}</v-col>
+                <v-col>Clients: {{ room.clients.length }}</v-col>
+              </v-row>
+              <template v-slot:actions>
+                <v-icon @click="select(i)">mdi-chevron-down</v-icon>
+              </template>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row>PID: {{ room.pid }} </v-row>
+              <v-row>port: {{ room.port }} </v-row>
+              <v-row>hostId: {{ room.hostId }} </v-row>
+              <v-row>clients: {{ room.clients }} </v-row>
+              <v-row>data: {{ room.data }} </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-main>
+    </v-app>
+  </div>
+  <!-- magx client -->
+  <script type="text/javascript" src="/magx"></script>
+  <script type="text/javascript" src="/magx/monitor/js"></script>
+  <!-- vuejs -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <!-- vuetifyjs -->
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+  <script>
+    let room = null
+    let state = {}
+    const clients = {}
+ 
+    const { host, port, protocol } = window.document.location
+    var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:", serializer })
+
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data: () => ({
+        selected: null,
+        rooms: []
+      }),
+      async mounted() {
+        await client.authenticate("monitor")
+        this.refresh()
+      },
+      methods: {
+        async refresh() {
+          this.rooms = await client.getRooms([])
+        },
+        inspect(roomId) {
+          window.location.href = window.location.origin + "/magx/monitor/" + roomId
+        },
+        select(index) {
+          this.selected = this.selected === index ? null : index
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

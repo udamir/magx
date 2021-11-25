@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+      body { font-family: Tahoma, Geneva, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <p>This room doesn't use the room's state. It just broadcast messages through "broadcast" method.</p>
+
+    <strong>Messages</strong><br>
+
+    <form id="form">
+      <input type="text" id="input" value="" autofocus/>
+      <input type="submit" value="send" />
+    </form>
+
+    <div id="messages"></div>
+
+    <!-- magx client -->
+    <script type="text/javascript" src="/magx"></script>
+    
+    <script>
+      const { host, port, protocol } = window.document.location
+      var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:" })
+      client.authenticate()
+        .then(() => client.getRooms("chat"))
+        .then(rooms => rooms.length ? client.joinRoom(rooms[0].id) : client.createRoom("chat"))
+        .then(room => {
+          console.log("joined")
+
+          // new room state
+          room.onSnapshot((state) => {
+            console.log("initial room state:", state);
+          })
+
+          // listen to patches coming from the server
+          room.onPatch((patch) => {
+            // this signal is triggered on each patch
+            console.log("room state patch:", patch);
+          })
+    
+          // listen to messages coming from the server
+          room.onMessage("messages", (message) => {
+            var p = document.createElement("p");
+            p.innerText = message;
+            document.querySelector("#messages").appendChild(p);
+          })
+
+          // send message to room on submit
+          document.querySelector("#form").onsubmit = function(e) {
+              e.preventDefault();
+
+              var input = document.querySelector("#input");
+              console.log("input:", input.value);
+
+              // send data to room
+              room.send("message", input.value);
+
+              // clear input
+              input.value = "";
+           }
+        })
+    </script>
+  </body>
+</html>

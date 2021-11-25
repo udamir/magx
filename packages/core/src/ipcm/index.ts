@@ -24,6 +24,7 @@ export interface IPCParams<T extends IProcessState> {
   timeout?: number
   state?: T
   processId: string
+  instanceName?: string
   healthCheckInterval?: number
 }
 
@@ -45,10 +46,12 @@ export abstract class IPCManager<S extends IProcessState = any> {
   public state: S
   public instances: Map<string, IProcessInstance<S>>
   private healthCheckTimeout?: NodeJS.Timeout
+  private instanceName: string
 
   constructor(params: IPCParams<S>) {
     this.processId = params.processId
     this.timeout = params.timeout || 1000
+    this.instanceName = params.instanceName = "instance"
     this.requestHandlers = {}
     this.instances = new Map<string, IProcessInstance<S>>()
     this.healthCheckInterval = params?.healthCheckInterval || 30000
@@ -56,7 +59,7 @@ export abstract class IPCManager<S extends IProcessState = any> {
   }
 
   public init() {
-    this.subscribe("instance:add", (id: string) => {
+    this.subscribe(`${this.instanceName}:add`, (id: string) => {
       // handle new instance
       this.addInstance(id)
       console.log(`Process ${this.processId}: added instance ${id} [${this.instances.size}]`)
@@ -64,7 +67,7 @@ export abstract class IPCManager<S extends IProcessState = any> {
       this.publish(`${id}:discovery`, { id: this.processId, state: this.state })
     })
 
-    this.subscribe("instance:delete", (id: string) => {
+    this.subscribe(`${this.instanceName}:delete`, (id: string) => {
       this.deleteInstance(id)
     })
 
@@ -89,7 +92,7 @@ export abstract class IPCManager<S extends IProcessState = any> {
     })
 
     this.instances.set(this.processId, { state: this.state, ttl: -1 })
-    this.publish("instance:add", this.processId)
+    this.publish(`${this.instanceName}:add`, this.processId)
     this.startHealthCheck()
   }
 
@@ -112,7 +115,7 @@ export abstract class IPCManager<S extends IProcessState = any> {
   }
 
   public terminate() {
-    this.publish("instance:delete", this.processId)
+    this.publish(`${this.instanceName}:delete`, this.processId)
     close()
   }
 

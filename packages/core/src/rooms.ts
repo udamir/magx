@@ -146,8 +146,8 @@ export class RoomManager {
         // trigger room.onJoin(client)
         try {
           room.onJoin && await room.onJoin(client, options, auth)
-        } catch (error: any) {
-          return client.error(ErrorCode.JoinError, error?.message || JSON.stringify(error))
+        } catch (error) {
+          return client.error(ErrorCode.JoinError, (error as any)?.message || JSON.stringify(error))
         }
 
         this.setRoomClient(room, client)

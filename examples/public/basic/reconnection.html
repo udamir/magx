@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+      body { font-family: Tahoma, Geneva, sans-serif; }
+    </style>
+
+    <!-- magx client -->
+    <script type="text/javascript" src="/magx"></script>
+
+  </head>
+  <body>
+
+    <p>This example shows how to use</p>
+    <ul>
+        <li><code>waitReconection()</code> - server-side</li>
+        <li><code>reconnect()</code> - client-side</li>
+    </ul>
+    <p>...to reestablish a connection into a <code>Room</code>.</p>
+
+    <p>Open Developer Tools for log messages.</p>
+
+    <p><strong>Commands</strong></p>
+
+    <button onclick="join()">join room</button>
+    <button onclick="leave()">forcibly close room connection</button>
+    <button onclick="reconnect()">reconnect</button>
+
+    <script>
+      let room = null
+      const onJoin = (r, reconnect) => {
+        room = r
+
+        if (reconnect) {
+          console.log("Reconnected successfully!")
+        } else {
+          console.log("Joined successfully!")
+        }
+
+        localStorage.setItem("roomId", room.id)
+        localStorage.setItem("port", room.port)
+ 
+        room.onMessage("status", (message) => console.log(message));
+        room.onLeave(() => console.log("Bye, bye!"))
+      }
+
+      const leave = () => {
+        if (room) {
+          room.connection.close()
+          room = null
+        } else {
+          console.warn("Not connected.");
+        }
+      }
+
+      const reconnect = async () => {
+        const token = localStorage.getItem("token")
+        var roomId = localStorage.getItem("roomId")
+        var port = localStorage.getItem("port")
+
+        const auth = await client.verify(token)
+        let room = null
+        if (auth) {
+          console.log(`Token ${token} verified`, auth)
+          try {
+            room = await client.reconnect(roomId)
+            onJoin(room, true)
+          } catch (error) {
+            console.error("Error", error)
+          }
+        }
+
+        if (!room) {
+          localStorage.removeItem("roomId")
+          localStorage.removeItem("port")
+          console.log("Cannot reconnect")
+        }
+      }
+
+      const { host, port, protocol } = window.document.location
+      var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:" })
+
+      const join = async () => {
+        try {
+          if (!client.auth) {
+            const auth = await client.authenticate()
+            console.log("session created", auth)
+            localStorage.setItem("token", auth.token)
+          }
+          const rooms = await client.getRooms("reconnection")
+          const room = await (rooms.length ? client.joinRoom(rooms[0].id) : client.createRoom("reconnection"))
+           
+          onJoin(room, false)
+        } catch (error) {
+          client.token = ""
+          localStorage.removeItem("token")
+          console.error("Error", error);
+        }
+      }
+     
+    </script>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+      body { font-family: Tahoma, Geneva, sans-serif; }
+    </style>
+
+  </head>
+  <body>
+    <p>This example shows how to use <code>LobbyRoom</code>:</p>
+    <ul>
+        <li>When you join a lobby, you'll receive the current list of rooms</li>
+        <li>Then, you'll receive updates when rooms are created, updated, or removed.</li>
+        <li>(All rooms on magx-examples are added to lobby watch list, try joining other demos to see realtime updates here)</li>
+    </ul>
+
+    <p>Open Developer Tools for log messages.</p>
+
+    <p><strong>Commands</strong></p>
+
+    <button onclick="join()">join lobby</button>
+    <button onclick="leave()">leave lobby</button>
+
+    <h2>All rooms:</h2>
+    <ul id="all_rooms"></ul>
+
+    <!-- magx client -->
+    <script type="text/javascript" src="/magx"></script>
+    
+    <script>
+      let allRooms = null
+      let lobby = null
+
+      const onJoin = () => {
+        console.log("Joined lobby room!")
+        // listen to patches coming from the server
+        lobby.onMessage("rooms", (rooms) => {
+          allRooms = rooms
+          update_full_list()
+          console.log("Received full list of rooms:", allRooms)
+        })
+
+        lobby.onMessage("room_update", ({ roomId, data }) => {
+          if (data === null) { // room removed
+            console.log("Room removed", roomId)
+            const index = allRooms.findIndex(room => room.id === roomId)
+            if (index < 0) { return }
+            allRooms.splice(index, 1)
+            update_full_list()
+          } else {
+            const roomIndex = allRooms.findIndex((room) => room.roomId === roomId)
+            if (roomIndex >= 0) { // room updated
+              console.log("Room update:", data)
+              allRooms[roomIndex] = data
+            } else { //room added
+              console.log("New room", data)
+              allRooms.push(data)
+            }
+            update_full_list()
+          }
+        })
+
+        lobby.onLeave(() => {
+          allRooms = []
+          update_full_list()
+          console.log("Bye, bye!")
+        })
+      }
+
+      const update_full_list = () => {
+        var el = document.getElementById('all_rooms')
+        el.innerHTML = allRooms.map((room) => "<li><code>" + JSON.stringify(room) + "</code></li>").join("\n")
+      }
+
+      const leave = () => {
+        if (lobby) {
+          lobby.leave()
+        } else {
+          console.warn("Not connected.")
+        }
+      }
+
+      const { host, port, protocol } = window.document.location
+      var client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:" })
+      
+      const join = () => {
+        client.authenticate()
+          .then(() => client.getRooms("lobby"))
+          .then(rooms => rooms.length ? client.joinRoom(rooms[0].id) : client.createRoom("lobby"))
+          .then(room => {
+            lobby = room
+            onJoin()
+          }).catch(e => {
+            console.error("Error", e);
+          })
+      }
+
+    </script>
+
+  </body>
+</html>

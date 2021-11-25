@@ -1,6 +1,6 @@
 import { Worker } from "cluster"
 
-import { IPCManager, IPCParams, IProcessState, ProcessListener } from "../"
+import { IPCManager, IPCParams, IProcessState, ProcessListener } from ".."
 import { IWorkerMessage } from "./master"
 
 /**

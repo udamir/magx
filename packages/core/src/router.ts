@@ -9,7 +9,7 @@ export interface IRequestContext {
   path: string
   method: string
   params: { [key: string]: string }
-  query: { [key: string]: string | string[] }
+  query: NodeJS.Dict<string | string[]>
   headers: http.IncomingHttpHeaders
   payload?: any
   auth?: any

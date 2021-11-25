@@ -1,16 +1,27 @@
 {
-  "name": "magx",
-  "version": "0.5.7",
+  "name": "magx-monorepo",
   "description": "Multiplayer game server framework",
+  "private": true,
   "author": "Damir Yusipov",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "workspaces": [
+    "packages/*",
+    "examples"
+  ],
   "scripts": {
-    "patch": "tsc && npm version patch",
-    "major": "tsc && npm version major",
-    "minor": "tsc && npm version minor",
-    "test": "jest"
+    "build": "lerna run build",
+    "clean": "lerna clean",
+    "boot": "lerna bootstrap",
+    "test": "jest --collectCoverage",
+    "example": "lerna run start --scope @wsapix/examples --stream",
+    "graph": "lerna list --graph",
+    "bump": "lerna version prerelease --force-publish --no-push --no-git-tag-version",
+    "publish": "lerna publish --git-remote github",
+    "publish-alpha": "lerna publish prerelease --no-git-tag-version --dist-tag alpha",
+    "publish-stable": "lerna publish patch --no-git-tag-version",
+    "release": "lerna version --exact --force-publish --no-push --no-git-tag-version",
+    "preversion": "npm run build",
+    "postinstall": "npm run boot"
   },
   "keywords": [
     "magx",
@@ -25,19 +36,8 @@
     "url": "https://github.com/udamir/magx.git",
     "type": "git"
   },
-  "dependencies": {
-    "notepack.io": "^2.3.0",
-    "ws": "^7.5.3"
-  },
-  "peerDependencies": {
-    "ioredis": "^4.26.0",
-    "mongodb": "^4.0.1"
-  },
   "devDependencies": {
-    "@types/mongodb": "^3.6.20",
-    "@types/ioredis": "^4.26.6",
-    "@types/node": "^11.15.54",
-    "@types/ws": "^7.4.7",
+    "lerna": "^4.0.0",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",
     "ts-node": "^8.10.2",

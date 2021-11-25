@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="viewport" content="width=device-width" />
+
+  <style type="text/css">
+    body {
+      font-family: Tahoma, Geneva, sans-serif;
+    }
+    .player {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      padding-top: 24px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <p>This example shows how to use MosX state management in your room. Use arrows to move.</p>
+
+  <!-- magx client -->
+  <script type="text/javascript" src="/magx"></script>
+
+  <script>
+    let room = null
+    const players = {}
+
+    const addPlayer = (id, player) => {
+      var el = document.createElement("div")
+      el.className = "player"
+      el.style.left = player.x + "px"
+      el.style.top = player.y + "px"
+      el.style.background = player.color
+      el.innerText = "Player " + id
+
+      player.el = el
+      players[id] = player
+      document.body.appendChild(el);
+    }
+
+    const removePlayer = (id) => {
+      document.body.removeChild(players[id].el);
+      delete players[id];
+    }
+
+    const movePlayer = (dim, shift) => {
+      room.send("move", { [dim]: shift })
+    }
+
+    const updatePlayer = (id, prop, value) => {
+      const player = players[id];
+      player[prop] = value
+      player.el.style.left = player.x + "px"
+      player.el.style.top = player.y + "px"
+    }
+
+    const setState = (snapshot) => {
+      console.log("initial room state:", snapshot);
+      Object.keys(snapshot.players).forEach((id) => addPlayer(id, snapshot.players[id]))
+    }
+
+    const { host, port, protocol } = window.document.location
+    const serializer = MagX.SchemaSerializer
+    const client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:", serializer })
+
+    const init = async() => {
+      // authenticate
+      await client.authenticate()
+
+      // get mosx-state rooms
+      const rooms = await client.getRooms("mosx-state")
+
+      // create or join room
+      room = rooms.length 
+        ? await client.joinRoom(rooms[0].id) // join existing room
+        : await client.createRoom("mosx-state") // create new room
+    
+      console.log("joined room")
+
+      // add state snapshot handler
+      room.onSnapshot((snapshot) => setState(snapshot))
+
+      // add change handlers
+      room.onChange("add", "players/:id", (patch, { id }) => addPlayer(id, patch.value))
+      room.onChange("remove", "players/:id", (patch, { id }) => removePlayer(id))
+      room.onChange("replace", "players/:id/:prop", (patch, { id, prop }) => updatePlayer(id, prop, patch.value))
+
+      window.addEventListener("keydown", ({ which }) => {
+        switch (which) {
+          case 38: return movePlayer("y", -1)
+          case 39: return movePlayer("x",  1)
+          case 40: return movePlayer("y",  1)
+          case 37: return movePlayer("x", -1)
+        }
+      })
+    }
+
+    try {
+      init()
+    } catch (error) {
+      console.log(error)
+    }
+  </script>
+</body>
+
+</html>

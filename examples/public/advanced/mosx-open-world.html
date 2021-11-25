@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="viewport" content="width=device-width" />
+
+  <!-- magx client -->
+  <script type="text/javascript" src="/magx"></script>
+
+  <style>
+    body {
+      font-family: Tahoma, Geneva, sans-serif;
+    }
+  </style>
+
+  <style type="text/css">
+    .player {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      padding-top: 24px;
+      box-sizing: border-box;
+    }
+
+    .cell {
+      position: absolute;
+      border: 1px solid lightgrey;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <p>This example shows how to split open world into rooms. Use arrows to move.</p>
+
+  <script>
+    const { host, port, protocol } = window.document.location
+    const serializer = MagX.SchemaSerializer
+    const client = new MagX.Client({ address: host.replace(/:.*/, ''), port, secure: protocol === "https:", serializer })
+
+    let cells = {}
+    const cellsize = 400
+
+    const movePlayer = (dim, shift) => {
+      Object.values(cells).forEach((cell) => {
+        cell.room.send("move", { [dim]: shift })
+      })
+    }
+
+    const createPlayer = (index, id, player) => {
+      const { x, y, players, el } = cells[index]
+
+      var playerEl = document.createElement("div")
+      playerEl.className = "player"
+      playerEl.style.left = player.x - x * cellsize + "px"
+      playerEl.style.top = player.y - y * cellsize + "px"
+      playerEl.style.background = player.color
+      playerEl.innerText = "Player " + id
+
+      player.el = playerEl
+      players[id] = player
+      el.appendChild(playerEl)
+      draw(x, y, player)
+    }
+
+    const removePlayer = (index, id) => {
+      const { players, el } = cells[index]
+      el.removeChild(players[id].el);
+      delete players[id];
+    }
+
+    const createCell = (x, y, room) => {
+      var el = document.createElement("div")
+      el.className = "cell"
+
+      const index = `${x}:${y}`
+
+      el.style.left = x * cellsize + "px"
+      el.style.top = y * cellsize + "px"
+      el.style.width = cellsize + "px"
+      el.style.height = cellsize + "px"
+
+      // el.style.overflow = "hidden"
+      el.innerText = index
+
+      const rect = {
+        left: x * cellsize,
+        right: x * cellsize + cellsize,
+        top: y * cellsize,
+        bottom: y * cellsize + cellsize,
+      }
+
+      document.body.appendChild(el);
+      cells[index] = { el, players: [], room, rect, x, y }
+    }
+
+    const removeCell = (index) => {
+      const { el } = cells[index]
+      document.body.removeChild(el);
+      delete cells[index]
+    }
+
+    const draw = (x, y, player) => {
+      player.el.style.left = player.x - x * cellsize + "px"
+      player.el.style.top = player.y - y * cellsize + "px"
+    }
+
+    const manageRooms = (player, cid) => {
+      const { rect, x, y } = cells[cid]
+      // check if need to join next room
+      if (player.x > rect.right - 100 && !cells[`${x+1}:${y}`] && x < 2) {
+        joinOpenWorldRoom(x + 1, y, player)
+      } else if (player.x < rect.left + 100 && !cells[`${x-1}:${y}`] && x > 0) {
+        joinOpenWorldRoom(x - 1, y, player)
+      } else if (player.y > rect.bottom - 100 && !cells[`${x}:${y+1}`] && y < 1) {
+        joinOpenWorldRoom(x, y + 1, player)
+      } else if (player.y < rect.top + 100 && !cells[`${x}:${y-1}`] && y > 0) {
+        joinOpenWorldRoom(x, y - 1, player)
+      }
+
+      // check if need to leave prev room
+      if (player.x < rect.right - 100 && cells[`${x+1}:${y}`]) {
+        leaveOpenWorldRoom(x + 1, y, player)
+      } else if (player.x > rect.left + 100 && cells[`${x-1}:${y}`]) {
+        leaveOpenWorldRoom(x - 1, y, player)
+      } else if (player.y < rect.bottom - 100 && cells[`${x}:${y+1}`]) {
+        leaveOpenWorldRoom(x, y + 1, player)
+      } else if (player.y > rect.top + 100 && cells[`${x}:${y-1}`]) {
+        leaveOpenWorldRoom(x, y - 1, player)
+      }
+    }
+
+    const joinOpenWorldRoom = async (x, y, player) => {
+      const cid = `${x}:${y}`
+
+      // get open_world rooms list and find room with cid
+      const rooms = await client.getRooms("open-world")
+      const link = rooms.find(({ data }) => data.id === cid)
+      
+      // join room
+      const pos = player && { x: player.x, y: player.y }
+      const color = player && player.color
+      const room = link 
+        ? await client.joinRoom(link.id, { pos, color }) 
+        : await client.createRoom("open-world", { id: cid, size: cellsize, pos, color })
+      // create cell object
+      const cell = cells[cid] || createCell(x, y, room)
+
+      console.log("joined room: ", cid)
+
+      // handle room state update
+      room.onSnapshot((state) => {
+        Object.keys(state.players).forEach((id) => {
+          if (!state.players[id]) { return }
+          createPlayer(cid, id, state.players[id])
+          if (id === client.auth.id) { manageRooms(state.players[id], cid) }
+        })
+      })
+
+      room.onChange("add", "players/:id", ({ value: player }, { id }) => {
+        createPlayer(cid, id, player)
+        if (id === client.auth.id) { manageRooms(player, cid) }
+      })
+
+      room.onChange("remove", "players/:id", (patch, { id }) => {
+        removePlayer(cid, id)
+      })
+
+      room.onChange("replace", "players/:id", ({ value }, { id }) => {
+        if (value) {
+          createPlayer(cid, id, value)
+        } else {
+          removePlayer(cid, id)
+        }
+      })
+
+      room.onChange("replace", "players/:id/:prop", ({ value }, { id, prop }) => {
+        const { players, rect, x, y } = cells[cid]
+        const player = players[id]
+        player[prop] = value
+        draw(x, y, player)
+
+        if (id === client.auth.id) { manageRooms(player, cid) }
+      })
+    }
+
+    const leaveOpenWorldRoom = async (x, y, player) => {
+      const { room } = cells[`${x}:${y}`]
+      await room.leave()
+      removeCell(`${x}:${y}`)
+      console.log("left room: ", `${x}:${y}`)
+    }
+
+    const init = async () => {
+      await client.authenticate()
+      
+      // get rooms list
+      const rooms = await client.getRooms("open-world")
+      
+      // select random room to join
+      const index = Math.floor(Math.random() * (rooms.length + 1))
+      const room = rooms[index] || { data: { id: "0:0" } }
+
+      const [x, y] = room.data.id.split(":")
+      await joinOpenWorldRoom(Number(x), Number(y))
+    }
+
+    try {
+      init()
+    } catch (error) {
+      console.log(error)
+    }
+
+    window.addEventListener("keydown", ({ which }) => {
+      switch (which) {
+        case 38: return movePlayer("y", -1)
+        case 39: return movePlayer("x",  1)
+        case 40: return movePlayer("y",  1)
+        case 37: return movePlayer("x", -1)
+      }
+    })
+  </script>
+</body>
+
+</html>

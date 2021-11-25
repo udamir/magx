@@ -1,0 +1,38 @@
+{
+  "name": "@magx/examples",
+  "private": true,
+  "version": "0.2.4",
+  "description": "Examples of how to use magx, mosx and magx-client",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "cluster": "ts-node src/cluster.ts",
+    "pm2": "tsc && pm2 start pm2.config.js",
+    "serve": "nodemon --watch '**/*.ts' --ignore '**/*.spec.ts' --exec ts-node src/index.ts"
+  },
+  "keywords": [
+    "magx",
+    "mosx",
+    "examples"
+  ],
+  "author": "Damir Yusipov",
+  "license": "MIT",
+  "dependencies": {
+    "ioredis": "^4.28.0",
+    "mongodb": "^4.1.4",
+    "magx": "^0.5.7",
+    "magx-client": "^0.7.2",
+    "magx-monitor": "0.0.7",
+    "mosx": "^0.8.10"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.1",
+    "@types/mongodb": "^4.0.7",
+    "@types/node": "^14.17.34",
+    "nodemon": "^1.19.4",
+    "ts-node": "^8.10.2",
+    "tslint": "^5.20.1",
+    "typescript": "^4.5.2"
+  }
+}
