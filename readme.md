@@ -30,12 +30,12 @@ MagX provides to you:
 
 ### From examples project
 
-The easiest way to try out MagX is using the [magx-example](https://github.com/udamir/magx-examples) project:
+The easiest way to try out MagX is using the [magx-example](https://github.com/udamir/magx/examples) project:
 ## Installation
 
 ```
-git clone https://github.com/udamir/magx-examples.git
-cd magx-examples
+git clone https://github.com/udamir/magx.git
+cd magx/examples
 npm install
 ```
 
