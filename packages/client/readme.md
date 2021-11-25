@@ -19,7 +19,7 @@ import { Client } from "magx-client"
 ### CDN link
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/magx-client@0.7.1/dist/magx.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/magx-client@0.7.2/dist/magx.js"></script>
 ```
 
 or you can include magx-client package to server dependencies and use it on client:

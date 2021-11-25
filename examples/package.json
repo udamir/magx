@@ -21,7 +21,7 @@
   "dependencies": {
     "ioredis": "^4.28.0",
     "mongodb": "^4.1.4",
-    "magx": "^0.5.7",
+    "magx": "^0.5.8",
     "magx-client": "^0.7.2",
     "magx-monitor": "0.0.7",
     "mosx": "^0.8.10"

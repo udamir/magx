@@ -4,8 +4,8 @@ On this repository you can find basic and advanced examples of how to use [magx]
 
 ## How to run
 ```
-git clone https://github.com/udamir/magx-examples.git
-cd magx-examples
+git clone https://github.com/udamir/magx.git
+cd magx/examples
 npm install
 npm start
 ```
