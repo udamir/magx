@@ -26,6 +26,9 @@ export class LoadBalancer {
   }
 
   public async findProcessForRoom(): Promise<string> {
+    // get all processes id
+    const pids = await this.ipcm.pids()
+
     log.debug(`Find process for room:`)
     // get all exisiting rooms
     const roomsCache = await this.rooms.cache.findMany()
@@ -33,13 +36,15 @@ export class LoadBalancer {
     // count rooms count and clients count per process
     const processes: IProcesses = {}
     roomsCache.forEach((room: IRoomObject) => {
-      const { rooms = 0, clients = 0 } = processes[room.pid] || {}
-      processes[room.pid] = { rooms: rooms + 1, clients: clients + room.clients.length }
+      if (pids.includes(String(room.pid))) {
+        const { rooms = 0, clients = 0 } = processes[room.pid] || {}
+        processes[room.pid] = { rooms: rooms + 1, clients: clients + room.clients.length }
+      } else {
+        this.rooms.cache.remove(room.key)
+      }
     })
 
     log.debug(`Current process load:`, processes)
-    // get all processes id
-    const pids = await this.ipcm.pids()
 
     // find process with min load
     let minLoad = Infinity

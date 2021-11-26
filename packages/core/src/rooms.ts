@@ -250,7 +250,7 @@ export class RoomManager {
     for (const room of cachedRooms) {
       const pid = String(room.pid)
       if (this.server.ipcm.processId !== pid && !this.server.ipcm.instances.has(pid)) {
-        await this.cache.remove(pid)
+        await this.cache.remove(room.id)
       } else {
         rooms.push(room)
       }

@@ -9,7 +9,7 @@ export class MongoCache<T> implements ICache<T> {
   }
 
   public async set(key: string, data: T): Promise<void> {
-    this.cache.updateOne({ key }, { $set: data }, { upsert: true })
+    await this.cache.updateOne({ key }, { $set: data }, { upsert: true })
     return
   }
 
