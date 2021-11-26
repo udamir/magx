@@ -90,13 +90,9 @@ export class Room {
       }
 
       const onEncodedPatch: any = (buffer: any) => {
-        try {
-          if (this.serializer) {
-            const patch = this.serializer.decodePatch(buffer)
-            onPatch(patch)
-          }
-        } catch (error) {
-          throw new Error(error)
+        if (this.serializer) {
+          const patch = this.serializer.decodePatch(buffer)
+          onPatch(patch)
         }
       }
 
