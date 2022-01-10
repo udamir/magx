@@ -158,8 +158,9 @@ Simple chat is ready! You can open several tabs, send and recieve messags.
 ## Documentation
 soon...
 
-## Roadmap
-https://github.com/udamir/magx/wiki
+## Status and roadmap
+[Current project status](https://github.com/udamir/magx/wiki)
+[When Magx v1.0 Release](https://github.com/udamir/magx/wiki/When-Magx-v1.0-Release%3F)
 
 ## License
 
