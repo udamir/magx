@@ -161,7 +161,7 @@ soon...
 ## Status and roadmap
 [Current project status](https://github.com/udamir/magx/wiki)
 
-[When Magx v1.0 Release](https://github.com/udamir/magx/wiki/When-Magx-v1.0-Release%3F)
+[When will Magx v1.0 release](https://github.com/udamir/magx/wiki/When-Magx-v1.0-Release%3F)
 
 ## License
 
